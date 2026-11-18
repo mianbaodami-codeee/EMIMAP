@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: omnikit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-omnikit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-omnikit_change_me_in_prod}
+      POSTGRES_DB: ${POSTGRES_DB:-omnikit}
+    volumes:
+      - omnikit_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-omnikit} -d ${POSTGRES_DB:-omnikit}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: omnikit-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - omnikit_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: omnikit-web
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${WEB_BIND_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-omnikit}:${POSTGRES_PASSWORD:-omnikit_change_me_in_prod}@postgres:5432/${POSTGRES_DB:-omnikit}
+      REDIS_URL: redis://redis:6379
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-OmniKit AI}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_DEFAULT_MODEL: ${OPENAI_DEFAULT_MODEL:-gpt-4o-mini}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_DEFAULT_MODEL: ${GEMINI_DEFAULT_MODEL:-gemini-2.5-flash}
+      APP_HMAC_SECRET: ${APP_HMAC_SECRET:-replace-with-32-byte-random-secret}
+
+volumes:
+  omnikit_pgdata:
+  omnikit_redisdata:

@@ -1,0 +1,10 @@
+node_modules
+.pnpm-store
+apps/web/.next
+apps/web/test-results
+apps/web/playwright-report
+.git
+.env
+.env.local
+data
+*.log

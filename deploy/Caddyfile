@@ -1,0 +1,19 @@
+# Caddy 自动 HTTPS 反向代理配置示例
+# 使用方法：将 example.com 替换为您的真实域名（确保域名 A 记录已解析到服务器公网 IP）
+
+example.com {
+    encode zstd gzip
+
+    reverse_proxy 127.0.0.1:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}
