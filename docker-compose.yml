@@ -44,6 +44,7 @@ services:
     environment:
       NODE_ENV: production
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      BENCH_LATENCY_ENDPOINTS: ${BENCH_LATENCY_ENDPOINTS:-}
       DATABASE_URL: postgresql://${POSTGRES_USER:-omnikit}:${POSTGRES_PASSWORD:-omnikit_change_me_in_prod}@postgres:5432/${POSTGRES_DB:-omnikit}
       REDIS_URL: redis://redis:6379
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-OmniKit AI}

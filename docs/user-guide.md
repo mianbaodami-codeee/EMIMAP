@@ -38,3 +38,11 @@
 世界地图首先显示随应用发布的 Natural Earth 1:110m 国界与海岸线；WebGL 就绪后切换到交互画布，放大后可加载 OpenStreetMap 街道瓦片。无法使用 WebGL 时可以拖动、缩放矢量底图并选择坐标。审阅版可离线查找内置地点，完整联网分析需运行后端。
 
 底图数据取自 [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/)，采用公有领域数据。品牌轮廓部分取自 [Simple Icons 11.15](https://github.com/simple-icons/simple-icons/tree/11.15.0)，品牌标识归各权利人所有。
+
+## Windows 测试与基米大师
+
+在 `/windows-bench` 选择单项测试或运行全部。CPU 和内存测试在 Worker 中执行，图形使用 WebGL2，存储写入来源私有文件系统。设备信息由浏览器提供，物理硬盘型号与精确硬件配置由客户端读取。测试结果保存在此浏览器，可勾选两项同类成绩比较。
+
+`运行榜单测试` 会取回一次性负载。选择 `发布本次成绩` 后，服务器复算负载并用数据库主键阻止挑战重放。浏览器上报的用时、系统和线程数属于参考数据。预览站点需要完整后端才能发布榜单。
+
+`/jimi-master` 提供 Windows x64 测试 ZIP、.NET 8 桌面运行时链接和 SHA-256。操作说明和构建命令见 [客户端文档](../apps/jimi-desktop/README.md)。

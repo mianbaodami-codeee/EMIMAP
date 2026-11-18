@@ -132,10 +132,10 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
         fullPage: false,
       });
 
-      // 7. 检查后续阶段（第 3 阶段）蓝图占位页诚实标注保留完好
-      await page.goto("/windows-bench");
-      await expect(page.locator("h1")).toContainText("Windows 测试");
-      await expect(page.locator("body")).toContainText("计划交付阶段：第 3 阶段");
+      // 7. 检查后续路线与尚未实施的阶段规划
+      await page.goto("/andmore");
+      await expect(page.locator("h1")).toContainText("Andmore");
+      await expect(page.locator("body")).toContainText("计划交付阶段：第 4 阶段");
     } else {
       // 移动端 (390x844) 抽屉导航与响应式布局检查
       await page.screenshot({

@@ -211,3 +211,7 @@ html.theme-switching *::after {
 .account-panel input,.account-panel button { border:1px solid var(--border-subtle); border-radius:.5rem; padding:.6rem .8rem; }
 .account-panel button { background:var(--accent-primary); color:var(--accent-foreground); }
 .account-panel dl { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:1.5rem; }
+
+.bench-hero {
+  background: linear-gradient(122deg, var(--bg-surface) 32%, var(--accent-soft));
+}
