@@ -1,0 +1,42 @@
+{
+  "name": "@omnikit/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:init": "tsx src/lib/db/cli-init.ts",
+    "db:generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.16",
+    "@omnikit/shared": "workspace:*",
+    "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.4",
+    "ioredis": "^5.6.0",
+    "lucide-react": "^1.74.0",
+    "next": "^16.4.6",
+    "pg": "^8.14.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@tailwindcss/postcss": "^4.3.5",
+    "@types/node": "^22.13.0",
+    "@types/pg": "^8.11.11",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "drizzle-kit": "^0.31.1",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vitest": "^5.1.0"
+  }
+}

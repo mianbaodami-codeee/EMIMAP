@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+out/
+build/
+target/
+
+# Local data & runtime
+data/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# Test artifacts
+playwright-report/
+test-results/
+coverage/
+
+# OS & IDE
+.DS_Store
+.idea/
+.vscode/
+*.log

@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* ============================================================================
+ * OmniKit AI — 方向 A「精密仪器台 (Precision Instrument)」设计系统 Token
+ * 支持浅色 (Light) 与深色 (Dark) 双主题，遵循 WCAG AA 对比度标准
+ * 严禁深色荧光紫、彩虹渐变字与无意义装饰网格
+ * ============================================================================ */
+
+:root,
+html.light {
+  color-scheme: light;
+  --bg-canvas: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-hover: #e2e8f0;
+
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --fg-primary: #0f172a;
+  --fg-secondary: #475569;
+  --fg-muted: #64748b;
+
+  /* 工业青蓝主强调色 (高对比度深青蓝) */
+  --accent-primary: #0284c7;
+  --accent-primary-hover: #0369a1;
+  --accent-foreground: #ffffff;
+  --accent-soft: #e0f2fe;
+
+  /* 数据可信度语义色 */
+  --status-measured-fg: #047857;
+  --status-measured-bg: #ecfdf5;
+  --status-measured-border: #a7f3d0;
+
+  --status-verified-fg: #b45309;
+  --status-verified-bg: #fffbeb;
+  --status-verified-border: #fde68a;
+
+  --status-inferred-fg: #0369a1;
+  --status-inferred-bg: #f0f9ff;
+  --status-inferred-border: #bae6fd;
+
+  --status-native-fg: #334155;
+  --status-native-bg: #f1f5f9;
+  --status-native-border: #cbd5e1;
+
+  --danger-fg: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+
+  --shadow-flyout: 0 12px 32px -8px rgba(15, 23, 42, 0.14),
+    0 4px 12px -4px rgba(15, 23, 42, 0.08);
+}
+
+html.dark {
+  color-scheme: dark;
+  --bg-canvas: #090d16;
+  --bg-surface: #0f1623;
+  --bg-elevated: #151e2e;
+  --bg-subtle: #1a2436;
+  --bg-hover: #243147;
+
+  --border-subtle: #1e293b;
+  --border-strong: #334155;
+
+  --fg-primary: #f1f5f9;
+  --fg-secondary: #94a3b8;
+  --fg-muted: #64748b;
+
+  /* 清澈天青蓝强调色 */
+  --accent-primary: #38bdf8;
+  --accent-primary-hover: #7dd3fc;
+  --accent-foreground: #082f49;
+  --accent-soft: rgba(56, 189, 248, 0.12);
+
+  /* 深色模式下柔和且高辨识度的语义色 */
+  --status-measured-fg: #34d399;
+  --status-measured-bg: rgba(16, 185, 129, 0.12);
+  --status-measured-border: rgba(52, 211, 153, 0.28);
+
+  --status-verified-fg: #fbbf24;
+  --status-verified-bg: rgba(245, 158, 11, 0.12);
+  --status-verified-border: rgba(251, 191, 36, 0.28);
+
+  --status-inferred-fg: #38bdf8;
+  --status-inferred-bg: rgba(56, 189, 248, 0.12);
+  --status-inferred-border: rgba(56, 189, 248, 0.28);
+
+  --status-native-fg: #cbd5e1;
+  --status-native-bg: rgba(148, 163, 184, 0.12);
+  --status-native-border: rgba(148, 163, 184, 0.26);
+
+  --danger-fg: #f87171;
+  --danger-bg: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(248, 113, 113, 0.3);
+
+  --shadow-flyout: 0 18px 40px -8px rgba(0, 0, 0, 0.65),
+    0 4px 14px -4px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  border-color: var(--border-subtle);
+}
+
+html,
+body {
+  background-color: var(--bg-canvas);
+  color: var(--fg-primary);
+  font-family: "Inter", "Noto Sans SC", "PingFang SC", "Microsoft YaHei",
+    system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code,
+pre,
+.font-mono {
+  font-family: "JetBrains Mono", "Cascadia Code", "SFMono-Regular", Consolas,
+    monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 键盘无障碍焦点环 */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* 主题切换瞬间禁用色彩过渡，消除局部卡片延迟闪烁 */
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
+/* 尊重系统减弱动态效果偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 细滚动条美化 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+}

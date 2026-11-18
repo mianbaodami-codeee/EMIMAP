@@ -1,0 +1,19 @@
+{
+  "name": "omnikit-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OmniKit AI — AI 驱动的综合性跨平台工具平台（地图分析、AI 资源检索、硬件检测、基米大师、Andmore、玩机器、网址导引）",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @omnikit/web dev",
+    "build": "pnpm --filter @omnikit/shared build && pnpm --filter @omnikit/web build",
+    "start": "pnpm --filter @omnikit/web start",
+    "typecheck": "pnpm --filter @omnikit/shared typecheck && pnpm --filter @omnikit/web typecheck",
+    "test": "pnpm --filter @omnikit/web test",
+    "test:e2e": "pnpm --filter @omnikit/web test:e2e",
+    "db:init": "pnpm --filter @omnikit/web db:init"
+  }
+}
