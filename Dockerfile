@@ -1,40 +1,32 @@
 # ==============================================================================
-# OmniKit AI — 生产环境多阶段 Dockerfile (Node.js 24 LTS + pnpm Workspace)
+# OmniKit AI — 生产镜像 (Node.js 24 LTS + pnpm Workspace)
 # ==============================================================================
 FROM node:24-bookworm-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
+RUN --mount=type=secret,id=registry_ca \
+    export NODE_USE_ENV_PROXY=1; \
+    if [ -f /run/secrets/registry_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/registry_ca; fi; \
+    apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable && corepack prepare pnpm@12.21.0 --activate
 
 FROM base AS builder
 WORKDIR /app
 
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
-COPY packages/shared/package.json ./packages/shared/package.json
-COPY apps/web/package.json ./apps/web/package.json
-
-RUN pnpm install --frozen-lockfile
-
-COPY packages/shared ./packages/shared
-COPY apps/web ./apps/web
+COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm build
-
-FROM base AS runner
-WORKDIR /app
+RUN --mount=type=secret,id=registry_ca \
+    export NODE_USE_ENV_PROXY=1; \
+    if [ -f /run/secrets/registry_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/registry_ca; fi; \
+    pnpm install --frozen-lockfile --store-dir=/tmp/pnpm-store \
+    && pnpm build \
+    && rm -rf /tmp/pnpm-store apps/web/.next/cache
 
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-
-COPY --from=builder /app/package.json /app/pnpm-workspace.yaml /app/pnpm-lock.yaml /app/tsconfig.base.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/apps/web ./apps/web
 
 EXPOSE 3000
 

@@ -225,6 +225,7 @@ export function MapWorkspace({
   // MapLibre WebGL 实例或高分辩率交互式矢量投影回退模式（无 GPU 容器环境下无缝可用）
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<import("maplibre-gl").Map | null>(null);
+  const mapDarkRef = useRef(false);
   const activeMarkerRef = useRef<import("maplibre-gl").Marker | null>(null);
   const savedMarkersRef = useRef<import("maplibre-gl").Marker[]>([]);
   const [renderEngine, setRenderEngine] = useState<"maplibre_webgl" | "svg_atlas">(
@@ -319,6 +320,7 @@ export function MapWorkspace({
         });
 
         instance = map;
+        mapDarkRef.current = isDarkNow;
         map.once("load", () => {
           if (!cancelled && instance === map) {
             map.resize();
@@ -375,10 +377,12 @@ export function MapWorkspace({
   // 主题切换时同步更新 MapLibre 矢量图层配色
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || renderEngine !== "maplibre_webgl") return;
+    const isDark = theme === "dark";
+    if (!map || renderEngine !== "maplibre_webgl" || mapDarkRef.current === isDark) return;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      map.setStyle(buildEmbeddedMapStyle(theme === "dark") as any);
+      map.setStyle(buildEmbeddedMapStyle(isDark) as any);
+      mapDarkRef.current = isDark;
     } catch {}
   }, [theme, renderEngine]);
 
@@ -1060,10 +1064,11 @@ export function MapWorkspace({
               className="relative w-full h-[340px] sm:h-[430px] select-none overflow-hidden"
             >
               <div
-                ref={mapContainerRef}
                 className="absolute inset-0"
-                style={{visibility: renderEngine === "maplibre_webgl" ? "visible" : "hidden"}}
-              />
+                style={{ visibility: renderEngine === "maplibre_webgl" ? "visible" : "hidden" }}
+              >
+                <div ref={mapContainerRef} className="h-full w-full" />
+              </div>
 
               {renderEngine === "svg_atlas" && (
                 <svg
