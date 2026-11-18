@@ -41,7 +41,7 @@ const AI_SETTINGS_STORAGE_KEY = "omnikit.ai.settings";
 const AppUIContext = createContext<AppUIContextValue | null>(null);
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeMode>("dark");
+  const [theme, setThemeState] = useState<ThemeMode>("light");
   const [commandOpen, setCommandOpen] = useState(false);
   const [aiDrawerOpen, setAiDrawerOpenState] = useState(false);
   const aiDrawerTriggerRef = useRef<HTMLElement | null>(null);

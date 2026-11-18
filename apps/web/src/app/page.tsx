@@ -9,6 +9,10 @@ import { BUILTIN_SITE_SEEDS } from "@/lib/db/seed-sites";
 import { getCacheStore } from "@/lib/cache/store";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import { ProvenanceBadge } from "@/components/ui/provenance-badge";
+import {
+  resolveSiteBrandAppearance,
+  SiteBrandMark,
+} from "@/components/ui/site-brand-mark";
 
 export const dynamic = "force-dynamic";
 
@@ -133,33 +137,55 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
-          {featuredSites.map((site) => (
-            <a
-              key={site.slug}
-              href={site.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ backgroundColor: "var(--bg-surface)" }}
-              className="group rounded-md border px-3 py-2.5 flex items-center justify-between gap-2 hover:border-[var(--border-strong)] transition-colors"
-            >
-              <div className="min-w-0">
-                <div className="text-xs font-semibold truncate group-hover:underline">
-                  {site.name}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {featuredSites.map((site) => {
+            const brand = resolveSiteBrandAppearance({
+              slug: site.slug,
+              domain: site.url,
+              name: site.name,
+            });
+            return (
+              <a
+                key={site.slug}
+                href={site.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ backgroundColor: "var(--bg-surface)" }}
+                className="group relative overflow-hidden rounded-xl border p-3 flex items-center justify-between gap-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_10px_24px_-10px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow] duration-200"
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    background: `radial-gradient(120px circle at 16px 16px, ${brand.accentHex}18, transparent 72%)`,
+                  }}
+                  className="pointer-events-none absolute inset-0 opacity-75 group-hover:opacity-100 transition-opacity"
+                />
+                <div className="relative flex items-center gap-2.5 min-w-0">
+                  <SiteBrandMark
+                    slug={site.slug}
+                    domain={site.url}
+                    name={site.name}
+                    size="md"
+                  />
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold truncate group-hover:text-[var(--accent-primary)] transition-colors">
+                      {site.name}
+                    </div>
+                    <div
+                      style={{ color: "var(--fg-muted)" }}
+                      className="text-[11px] font-mono truncate"
+                    >
+                      {new URL(site.url).hostname.replace(/^www\./, "")}
+                    </div>
+                  </div>
                 </div>
-                <div
+                <ArrowUpRight
                   style={{ color: "var(--fg-muted)" }}
-                  className="text-[11px] font-mono truncate"
-                >
-                  {new URL(site.url).hostname.replace(/^www\./, "")}
-                </div>
-              </div>
-              <ArrowUpRight
-                style={{ color: "var(--fg-muted)" }}
-                className="h-3.5 w-3.5 shrink-0"
-              />
-            </a>
-          ))}
+                  className="relative h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
+              </a>
+            );
+          })}
         </div>
       </section>
 
@@ -189,7 +215,7 @@ export default async function HomePage() {
                 id={`module-card-${mod.id}`}
                 href={mod.href}
                 style={{ backgroundColor: "var(--bg-surface)" }}
-                className="rounded-lg border p-4 flex flex-col justify-between gap-4 hover:border-[var(--border-strong)] transition-colors"
+                className="rounded-xl border p-4 flex flex-col justify-between gap-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_10px_24px_-10px_rgba(15,23,42,0.12)] transition-[border-color,box-shadow]"
               >
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
@@ -203,7 +229,7 @@ export default async function HomePage() {
                             ? "var(--accent-primary)"
                             : "var(--fg-secondary)",
                         }}
-                        className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
                       >
                         <ModuleIcon name={mod.iconName} className="h-4 w-4" />
                       </span>
@@ -236,7 +262,7 @@ export default async function HomePage() {
                       }
                       className="px-2 py-0.5 rounded border text-[11px] font-mono shrink-0"
                     >
-                      {isReady ? "Phase 1 已上线" : `Phase ${mod.phase} 规划`}
+                      {isReady ? `Phase ${mod.phase} 已上线` : `Phase ${mod.phase} 规划`}
                     </span>
                   </div>
 

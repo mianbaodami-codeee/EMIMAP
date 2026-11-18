@@ -74,7 +74,7 @@ export const siteFavorites = pgTable(
   ]
 );
 
-/** 第二阶段预留：全球地图收藏地点表 */
+/** 第二阶段：全球地图收藏地点表 */
 export const savedPlaces = pgTable(
   "saved_places",
   {
@@ -92,6 +92,39 @@ export const savedPlaces = pgTable(
       .defaultNow(),
   },
   (table) => [index("saved_places_client_idx").on(table.clientId)]
+);
+
+/** 第二阶段：全球地图与 AI 地理空间问答历史记录表 */
+export const geoQueryHistory = pgTable(
+  "geo_query_history",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    clientId: varchar("client_id", { length: 64 }).notNull(),
+    placeName: varchar("place_name", { length: 180 }).notNull(),
+    latitude: doublePrecision("latitude").notNull(),
+    longitude: doublePrecision("longitude").notNull(),
+    prompt: text("prompt").notNull(),
+    provider: varchar("provider", { length: 32 }),
+    model: varchar("model", { length: 128 }),
+    measuredFacts: jsonb("measured_facts")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    webSources: jsonb("web_sources")
+      .$type<Array<Record<string, unknown>>>()
+      .notNull()
+      .default([]),
+    aiAnalysis: text("ai_analysis").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("geo_query_history_client_created_idx").on(
+      table.clientId,
+      table.createdAt
+    ),
+  ]
 );
 
 /** 第三阶段预留：跑分挑战 Nonce 与排行榜记录表 */

@@ -54,6 +54,24 @@ CREATE TABLE IF NOT EXISTS "saved_places" (
 CREATE INDEX IF NOT EXISTS "saved_places_client_idx"
   ON "saved_places" ("client_id");
 
+CREATE TABLE IF NOT EXISTS "geo_query_history" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "client_id" varchar(64) NOT NULL,
+  "place_name" varchar(180) NOT NULL,
+  "latitude" double precision NOT NULL,
+  "longitude" double precision NOT NULL,
+  "prompt" text NOT NULL,
+  "provider" varchar(32),
+  "model" varchar(128),
+  "measured_facts" jsonb DEFAULT '{}'::jsonb NOT NULL,
+  "web_sources" jsonb DEFAULT '[]'::jsonb NOT NULL,
+  "ai_analysis" text NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS "geo_query_history_client_created_idx"
+  ON "geo_query_history" ("client_id", "created_at");
+
 CREATE TABLE IF NOT EXISTS "benchmark_runs" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "execution_mode" varchar(24) NOT NULL,

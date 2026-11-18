@@ -75,15 +75,17 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       const retractedBox = await sidebar.boundingBox();
       expect(retractedBox?.width).toBe(60);
 
-      // 4. 切换浅色主题并截图验证高对比度可读性
-      await page.locator("#header-theme-toggle").click();
+      // 4. 验证默认浅色基底并切换深色主题检查双主题一致性
       await expect(page.locator("html")).toHaveClass(/light/);
+      await page.locator("#header-theme-toggle").click();
+      await expect(page.locator("html")).toHaveClass(/dark/);
       await page.screenshot({
-        path: path.join(SCREENSHOT_DIR, "03-desktop-overview-light.png"),
+        path: path.join(SCREENSHOT_DIR, "03-desktop-overview-dark.png"),
         fullPage: false,
       });
-      // 切回深色继续测试
+      // 切回浅色基底继续测试
       await page.locator("#header-theme-toggle").click();
+      await expect(page.locator("html")).toHaveClass(/light/);
 
       // 5. 测试全局命令面板与 AI 设置抽屉
       await page.locator("#header-search-trigger").click();
@@ -100,12 +102,14 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       await page.locator("#nav-link-hub").click();
       await expect(page).toHaveURL(/\/hub$/);
 
-      // 验证必选网站存在、搜索、收藏与新增自定义网址
+      // 验证必选网站存在、品牌渐变方块渲染、搜索、收藏与新增自定义网址
       await expect(
-        page.locator('[data-site-slug="steam"]')
+        page.locator('[data-site-slug="steam"] [data-brand-mark="steam"]')
       ).toBeVisible();
       await expect(
-        page.locator('[data-site-slug="google-gemini"]')
+        page.locator(
+          '[data-site-slug="google-gemini"] [data-brand-mark="google-gemini"]'
+        )
       ).toBeVisible();
 
       await page.locator("#hub-add-site-btn").click();
@@ -123,14 +127,14 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       );
 
       await page.screenshot({
-        path: path.join(SCREENSHOT_DIR, "04-desktop-hub-dark.png"),
+        path: path.join(SCREENSHOT_DIR, "04-desktop-hub-light.png"),
         fullPage: false,
       });
 
-      // 7. 检查阶段蓝图页诚实标注
-      await page.goto("/map");
-      await expect(page.locator("h1")).toContainText("全球地图与 AI 分析");
-      await expect(page.locator("body")).toContainText("计划交付阶段：第 2 阶段");
+      // 7. 检查后续阶段（第 3 阶段）蓝图占位页诚实标注保留完好
+      await page.goto("/windows-bench");
+      await expect(page.locator("h1")).toContainText("Windows 测试");
+      await expect(page.locator("body")).toContainText("计划交付阶段：第 3 阶段");
     } else {
       // 移动端 (390x844) 抽屉导航与响应式布局检查
       await page.screenshot({

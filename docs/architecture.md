@@ -18,6 +18,15 @@
 - `GET /api/hub/export` & `POST /api/hub/export`：导出与按 URL 自动去重导入自定义书签 JSON。
 - `GET /api/ai/status` & `POST /api/ai/status`：查询服务端大模型网关就绪状态及执行**服务端点连通性检查**（强制公网 HTTPS、禁止自动跟随重定向、校验域名全部解析 IP 并锁定 Socket 建连目标，返回 `endpointReachable` 与三态模型结果 `modelStatus: confirmed | not_found | unverifiable`）。
 
+## 2.1 第二阶段 API 接口契约（统一 AI 网关、全球地图与自主资源检索）
+
+- `POST /api/ai/chat`：统一大模型文本推理接口，适配 `openai`、`gemini` 与 `openai_compatible`，复用 `safe-upstream.ts` 全部公网 DNS IP 绑定、无重定向与可信端点密钥隔离规则。
+- `GET /api/geo/search?q=`：全球城市、国家、地标与坐标检索（融合 OpenStreetMap Nominatim 实时检索与内置权威空间基准索引）。
+- `GET /api/geo/reverse?lat=&lon=`：全球任意 WGS84 坐标逆地理编码、半球/太阳时区带计算与周边参考要素 Haversine 距离排序。
+- `GET /api/geo/places`、`POST /api/geo/places`、`DELETE /api/geo/places/:id`：按客户端会话隔离的收藏地点 PostgreSQL（`saved_places` 表）持久化接口。
+- `POST /api/geo/analyze` & `GET /api/geo/history`：针对选中地点执行三源严格隔离的空间问答（`measured` 实测地理要素 / `web_verified` 公开百科与 OSM 信源 / `ai_inferred` 模型推理或无密钥优雅降级），并持久化至 `geo_query_history` 表。
+- `POST /api/discover/search`：AI 自主资源寻找代理接口，内置正版与安全合规拦截门禁，输出四步执行轨迹（需求拆解 → 多源检索 → 官方域名核验 → 选型综述）及包含可验证依据与注意事项的结构化资源清单。
+
 ## 3. 可回缩悬停弹出导航栏与模态抽屉无障碍实现
 
 - **可回缩侧边栏 (`apps/web/src/components/shell/collapsible-sidebar.tsx`)**：

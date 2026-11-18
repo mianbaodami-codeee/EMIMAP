@@ -16,11 +16,11 @@ const THEME_INIT_SCRIPT = `
 (function() {
   try {
     var saved = localStorage.getItem('omnikit.theme');
-    var mode = (saved === 'light' || saved === 'dark') ? saved : 'dark';
+    var mode = (saved === 'light' || saved === 'dark') ? saved : 'light';
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(mode);
   } catch (e) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add('light');
   }
 })();
 `;
@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className="dark" suppressHydrationWarning>
+    <html lang="zh-CN" className="light" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>

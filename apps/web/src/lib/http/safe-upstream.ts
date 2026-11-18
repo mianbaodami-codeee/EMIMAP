@@ -143,15 +143,20 @@ export interface SecureHttpsGetOptions {
   requestImpl?: typeof https.request;
 }
 
+export interface SecureHttpsRequestOptions extends SecureHttpsGetOptions {
+  method?: "GET" | "POST";
+  body?: string;
+}
+
 /**
- * 发起携带 API Key 的安全上游 HTTPS GET 请求：
+ * 发起安全受控的上游 HTTPS 请求（支持 GET / POST）：
  * 1. 强制仅允许 https:// 协议
  * 2. 禁止自动跟随任何 3xx HTTP 重定向
  * 3. 校验域名全部解析 IP 并通过自定义 lookup 绑定建连目标，且在 socket 建连时二次校验远端 IP
  */
-export async function secureHttpsGet(
+export async function secureHttpsRequest(
   rawUrl: string,
-  options: SecureHttpsGetOptions = {}
+  options: SecureHttpsRequestOptions = {}
 ): Promise<SafeHttpsResponse> {
   let parsedUrl: URL;
   try {
@@ -188,6 +193,9 @@ export async function secureHttpsGet(
   const timeoutMs = options.timeoutMs ?? 8000;
   const requestFn = options.requestImpl ?? https.request;
   const pinnedLookup = createPinnedLookup(pinned);
+  const method = options.method ?? "GET";
+  const bodyBuffer =
+    typeof options.body === "string" ? Buffer.from(options.body, "utf8") : null;
 
   return new Promise<SafeHttpsResponse>((resolve, reject) => {
     let settled = false;
@@ -204,14 +212,22 @@ export async function secureHttpsGet(
       resolve(resp);
     };
 
+    const headers: Record<string, string> = {
+      Accept: "application/json",
+      ...options.headers,
+    };
+    if (bodyBuffer) {
+      headers["Content-Length"] = String(bodyBuffer.byteLength);
+      if (!headers["Content-Type"] && !headers["content-type"]) {
+        headers["Content-Type"] = "application/json; charset=utf-8";
+      }
+    }
+
     const req = requestFn(
       parsedUrl,
       {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          ...options.headers,
-        },
+        method,
+        headers,
         agent: false,
         servername: net.isIP(cleanHost) ? undefined : cleanHost,
         lookup: pinnedLookup,
@@ -280,12 +296,33 @@ export async function secureHttpsGet(
     });
 
     req.on("error", finishError);
+    if (bodyBuffer) {
+      req.write(bodyBuffer);
+    }
     req.end();
   });
+}
+
+export async function secureHttpsGet(
+  rawUrl: string,
+  options: SecureHttpsGetOptions = {}
+): Promise<SafeHttpsResponse> {
+  return secureHttpsRequest(rawUrl, { ...options, method: "GET" });
+}
+
+export async function secureHttpsPost(
+  rawUrl: string,
+  body: string,
+  options: SecureHttpsGetOptions = {}
+): Promise<SafeHttpsResponse> {
+  return secureHttpsRequest(rawUrl, { ...options, method: "POST", body });
 }
 
 export const upstreamTransport = {
   dnsLookupAll: defaultDnsLookupAll,
   httpsGet: secureHttpsGet,
+  httpsPost: secureHttpsPost,
+  httpsRequest: secureHttpsRequest,
 };
+
 

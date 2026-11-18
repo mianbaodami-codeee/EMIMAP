@@ -87,7 +87,7 @@ export const PLATFORM_MODULES: PlatformModuleMeta[] = [
     englishTag: "Geo Intelligence",
     group: "ai_explore",
     phase: 2,
-    status: "planned",
+    status: "active",
     iconName: "Globe2",
     executionBoundary: "Web 全功能",
     summary:
@@ -111,7 +111,7 @@ export const PLATFORM_MODULES: PlatformModuleMeta[] = [
     englishTag: "Resource Agent",
     group: "ai_explore",
     phase: 2,
-    status: "planned",
+    status: "active",
     iconName: "Sparkles",
     executionBoundary: "Web 全功能",
     summary:

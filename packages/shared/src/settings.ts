@@ -6,6 +6,7 @@ import { z } from "zod";
  */
 
 export const AI_PROVIDERS = ["openai", "gemini", "openai_compatible"] as const;
+export const AIProviderIdSchema = z.enum(AI_PROVIDERS);
 export type AIProviderId = (typeof AI_PROVIDERS)[number];
 
 export const ClientAISettingsSchema = z.object({
@@ -20,6 +21,35 @@ export const ClientAISettingsSchema = z.object({
 });
 
 export type ClientAISettings = z.infer<typeof ClientAISettingsSchema>;
+
+export function resolveClientAIRequestParams(settings: ClientAISettings): {
+  provider: AIProviderId;
+  model: string;
+  apiKey?: string;
+  baseUrl?: string;
+} {
+  const provider = settings.activeProvider;
+  if (provider === "gemini") {
+    return {
+      provider: "gemini",
+      model: settings.geminiModel,
+      apiKey:
+        settings.preferUserKey && settings.geminiApiKey
+          ? settings.geminiApiKey
+          : undefined,
+    };
+  }
+  return {
+    provider,
+    model: settings.openaiModel,
+    apiKey:
+      (settings.preferUserKey || provider === "openai_compatible") &&
+      settings.openaiApiKey
+        ? settings.openaiApiKey
+        : undefined,
+    baseUrl: settings.openaiBaseUrl || undefined,
+  };
+}
 
 export const TestAIConnectionSchema = z.object({
   provider: z.enum(AI_PROVIDERS),

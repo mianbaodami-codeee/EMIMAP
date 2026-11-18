@@ -21,6 +21,10 @@ import {
   type SiteCategory,
 } from "@omnikit/shared";
 import { CustomSiteModal } from "./custom-site-modal";
+import {
+  resolveSiteBrandAppearance,
+  SiteBrandMark,
+} from "@/components/ui/site-brand-mark";
 
 export function HubWorkspace({
   initialData,
@@ -430,166 +434,185 @@ export function HubWorkspace({
           id="hub-sites-grid"
           className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5"
         >
-          {filteredSites.map((site) => (
-            <article
-              key={site.id}
-              data-site-slug={site.slug}
-              style={{ backgroundColor: "var(--bg-surface)" }}
-              className="group rounded-lg border p-4 flex flex-col justify-between gap-3 hover:border-[var(--border-strong)] transition-colors"
-            >
-              <div className="space-y-2.5">
-                {/* 卡片首行：标识、名称与操作 */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div
+          {filteredSites.map((site) => {
+            const brand = resolveSiteBrandAppearance({
+              slug: site.slug,
+              domain: site.domain,
+              name: site.name,
+            });
+            return (
+              <article
+                key={site.id}
+                data-site-slug={site.slug}
+                style={{ backgroundColor: "var(--bg-surface)" }}
+                className="group relative overflow-hidden rounded-xl border p-4 flex flex-col justify-between gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow] duration-200"
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    background: `radial-gradient(160px circle at 24px 24px, ${brand.accentHex}16, transparent 72%)`,
+                  }}
+                  className="pointer-events-none absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity"
+                />
+                <div className="relative space-y-2.5">
+                  {/* 卡片首行：品牌渐变方块、名称与操作 */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <a
+                        href={site.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`打开 ${site.name}`}
+                        className="shrink-0 rounded-xl"
+                      >
+                        <SiteBrandMark
+                          slug={site.slug}
+                          domain={site.domain}
+                          name={site.name}
+                          size="lg"
+                        />
+                      </a>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <a
+                            href={site.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm font-semibold truncate group-hover:text-[var(--accent-primary)] hover:underline transition-colors"
+                          >
+                            {site.name}
+                          </a>
+                          {site.isOfficial ? (
+                            <span
+                              style={{
+                                color: "var(--status-measured-fg)",
+                                backgroundColor: "var(--status-measured-bg)",
+                                borderColor: "var(--status-measured-border)",
+                              }}
+                              title={site.verifiedNote || "经核实的官方主站"}
+                              className="px-1.5 py-0.5 text-[10px] font-medium rounded border leading-none shrink-0"
+                            >
+                              官方
+                            </span>
+                          ) : !site.isBuiltin ? (
+                            <span
+                              style={{
+                                color: "var(--accent-primary)",
+                                backgroundColor: "var(--accent-soft)",
+                              }}
+                              className="px-1.5 py-0.5 text-[10px] font-medium rounded leading-none shrink-0"
+                            >
+                              自定义
+                            </span>
+                          ) : null}
+                        </div>
+                        <div
+                          style={{ color: "var(--fg-muted)" }}
+                          className="text-[11px] font-mono truncate"
+                        >
+                          {site.domain}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 收藏与编辑删除按钮 */}
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => void handleToggleFavorite(site)}
+                        aria-label={
+                          site.isFavorite
+                            ? `取消收藏 ${site.name}`
+                            : `收藏 ${site.name}`
+                        }
+                        title={site.isFavorite ? "取消收藏" : "加入收藏置顶"}
+                        style={{
+                          color: site.isFavorite
+                            ? "#f59e0b"
+                            : "var(--fg-muted)",
+                        }}
+                        className="p-1.5 rounded-md hover:bg-[var(--bg-subtle)] transition-colors"
+                      >
+                        <Star
+                          className="h-4 w-4"
+                          fill={site.isFavorite ? "currentColor" : "none"}
+                        />
+                      </button>
+
+                      {!site.isBuiltin && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingSite(site);
+                              setModalOpen(true);
+                            }}
+                            aria-label={`编辑 ${site.name}`}
+                            style={{ color: "var(--fg-muted)" }}
+                            className="p-1.5 rounded-md hover:bg-[var(--bg-subtle)] hover:text-[var(--fg-primary)]"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteCustomSite(site)}
+                            aria-label={`删除 ${site.name}`}
+                            style={{ color: "var(--fg-muted)" }}
+                            className="p-1.5 rounded-md hover:bg-[var(--danger-bg)] hover:text-[var(--danger-fg)]"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 网站简介 */}
+                  <p
+                    style={{ color: "var(--fg-secondary)" }}
+                    className="text-xs leading-relaxed line-clamp-2"
+                  >
+                    {site.description}
+                  </p>
+                </div>
+
+                {/* 底部标签与直达链接 */}
+                <div className="relative pt-2.5 border-t flex items-center justify-between gap-2 text-[11px]">
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span
                       style={{
                         backgroundColor: "var(--bg-subtle)",
-                        color: "var(--accent-primary)",
+                        color: "var(--fg-secondary)",
                       }}
-                      className="w-9 h-9 rounded-md border flex items-center justify-center font-mono text-xs font-bold uppercase shrink-0"
+                      className="px-1.5 py-0.5 rounded shrink-0"
                     >
-                      {site.name.slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <a
-                          href={site.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-semibold truncate hover:underline"
-                        >
-                          {site.name}
-                        </a>
-                        {site.isOfficial ? (
-                          <span
-                            style={{
-                              color: "var(--status-measured-fg)",
-                              backgroundColor: "var(--status-measured-bg)",
-                              borderColor: "var(--status-measured-border)",
-                            }}
-                            title={site.verifiedNote || "经核实的官方主站"}
-                            className="px-1.5 py-0.5 text-[10px] font-medium rounded border leading-none shrink-0"
-                          >
-                            官方
-                          </span>
-                        ) : !site.isBuiltin ? (
-                          <span
-                            style={{
-                              color: "var(--accent-primary)",
-                              backgroundColor: "var(--accent-soft)",
-                            }}
-                            className="px-1.5 py-0.5 text-[10px] font-medium rounded leading-none shrink-0"
-                          >
-                            自定义
-                          </span>
-                        ) : null}
-                      </div>
-                      <div
-                        style={{ color: "var(--fg-muted)" }}
-                        className="text-[11px] font-mono truncate"
-                      >
-                        {site.domain}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 收藏与编辑删除按钮 */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => void handleToggleFavorite(site)}
-                      aria-label={
-                        site.isFavorite
-                          ? `取消收藏 ${site.name}`
-                          : `收藏 ${site.name}`
-                      }
-                      title={site.isFavorite ? "取消收藏" : "加入收藏置顶"}
-                      style={{
-                        color: site.isFavorite
-                          ? "#f59e0b"
-                          : "var(--fg-muted)",
-                      }}
-                      className="p-1.5 rounded-md hover:bg-[var(--bg-subtle)] transition-colors"
-                    >
-                      <Star
-                        className="h-4 w-4"
-                        fill={site.isFavorite ? "currentColor" : "none"}
-                      />
-                    </button>
-
-                    {!site.isBuiltin && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingSite(site);
-                            setModalOpen(true);
-                          }}
-                          aria-label={`编辑 ${site.name}`}
-                          style={{ color: "var(--fg-muted)" }}
-                          className="p-1.5 rounded-md hover:bg-[var(--bg-subtle)] hover:text-[var(--fg-primary)]"
-                        >
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleDeleteCustomSite(site)}
-                          aria-label={`删除 ${site.name}`}
-                          style={{ color: "var(--fg-muted)" }}
-                          className="p-1.5 rounded-md hover:bg-[var(--danger-bg)] hover:text-[var(--danger-fg)]"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* 网站简介 */}
-                <p
-                  style={{ color: "var(--fg-secondary)" }}
-                  className="text-xs leading-relaxed line-clamp-2"
-                >
-                  {site.description}
-                </p>
-              </div>
-
-              {/* 底部标签与直达链接 */}
-              <div className="pt-2.5 border-t flex items-center justify-between gap-2 text-[11px]">
-                <div className="flex items-center gap-1.5 overflow-hidden">
-                  <span
-                    style={{
-                      backgroundColor: "var(--bg-subtle)",
-                      color: "var(--fg-secondary)",
-                    }}
-                    className="px-1.5 py-0.5 rounded shrink-0"
-                  >
-                    {SITE_CATEGORY_LABELS[site.category]}
-                  </span>
-                  {site.tags.slice(0, 2).map((tag) => (
-                    <span
-                      key={tag}
-                      style={{ color: "var(--fg-muted)" }}
-                      className="truncate"
-                    >
-                      #{tag}
+                      {SITE_CATEGORY_LABELS[site.category]}
                     </span>
-                  ))}
-                </div>
+                    {site.tags.slice(0, 2).map((tag) => (
+                      <span
+                        key={tag}
+                        style={{ color: "var(--fg-muted)" }}
+                        className="truncate"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
 
-                <a
-                  href={site.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "var(--accent-primary)" }}
-                  className="inline-flex items-center gap-0.5 font-medium shrink-0 hover:underline"
-                >
-                  <span>访问</span>
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </a>
-              </div>
-            </article>
-          ))}
+                  <a
+                    href={site.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--accent-primary)" }}
+                    className="inline-flex items-center gap-0.5 font-medium shrink-0 hover:underline"
+                  >
+                    <span>访问</span>
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
 

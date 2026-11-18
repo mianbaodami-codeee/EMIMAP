@@ -13,6 +13,7 @@ import {
 import { PLATFORM_MODULES } from "@omnikit/shared";
 import { BUILTIN_SITE_SEEDS } from "@/lib/db/seed-sites";
 import { ModuleIcon } from "@/components/ui/module-icon";
+import { SiteBrandMark } from "@/components/ui/site-brand-mark";
 import { useAppUI } from "@/components/providers/app-providers";
 
 export function CommandPalette() {
@@ -176,15 +177,23 @@ export function CommandPalette() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setCommandOpen(false)}
-                    className="w-full flex items-center justify-between px-2.5 py-2 rounded-md hover:bg-[var(--bg-subtle)] transition-colors"
+                    className="group w-full flex items-center justify-between px-2.5 py-2 rounded-md hover:bg-[var(--bg-subtle)] transition-colors"
                   >
-                    <span className="min-w-0 pr-3">
-                      <span className="text-xs font-medium">{site.name}</span>
-                      <span
-                        style={{ color: "var(--fg-muted)" }}
-                        className="ml-2 text-xs truncate"
-                      >
-                        {site.verifiedNote}
+                    <span className="flex items-center gap-2.5 min-w-0 pr-3">
+                      <SiteBrandMark
+                        slug={site.slug}
+                        domain={site.url}
+                        name={site.name}
+                        size="sm"
+                      />
+                      <span className="min-w-0 truncate">
+                        <span className="text-xs font-medium">{site.name}</span>
+                        <span
+                          style={{ color: "var(--fg-muted)" }}
+                          className="ml-2 text-xs truncate"
+                        >
+                          {site.verifiedNote}
+                        </span>
                       </span>
                     </span>
                     <ArrowUpRight
