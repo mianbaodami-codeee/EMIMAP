@@ -16,7 +16,7 @@
 - `PATCH /api/hub/sites/:id`：切换任意站点收藏状态，或编辑当前用户创建的自定义网址（系统内置官方站点受写保护，篡改基础属性将返回 `403 FORBIDDEN_OPERATION`）。
 - `DELETE /api/hub/sites/:id`：删除用户自定义网址（系统内置站点禁止删除）。
 - `GET /api/hub/export` & `POST /api/hub/export`：导出与按 URL 自动去重导入自定义书签 JSON。
-- `GET /api/ai/status` & `POST /api/ai/status`：查询服务端大模型网关就绪状态及执行**服务端点连通性检查**（内置 `normalizeEndpointBaseUrl` + `assertSafeOutboundUrl` 防 SSRF 与可信端点隔离、8 秒超时熔断，返回结构化的 `endpointReachable` 与具体模型名称核验结果 `modelAvailable`）。
+- `GET /api/ai/status` & `POST /api/ai/status`：查询服务端大模型网关就绪状态及执行**服务端点连通性检查**（强制公网 HTTPS、禁止自动跟随重定向、校验域名全部解析 IP 并锁定 Socket 建连目标，返回 `endpointReachable` 与三态模型结果 `modelStatus: confirmed | not_found | unverifiable`）。
 
 ## 3. 可回缩悬停弹出导航栏与模态抽屉无障碍实现
 
