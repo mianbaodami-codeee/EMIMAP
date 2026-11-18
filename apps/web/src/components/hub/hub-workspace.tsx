@@ -23,7 +23,7 @@ import {
 import { CustomSiteModal } from "./custom-site-modal";
 import {
   resolveSiteBrandAppearance,
-  SiteBrandMark,
+  BrandCardBackdrop,
 } from "@/components/ui/site-brand-mark";
 
 export function HubWorkspace({
@@ -207,7 +207,7 @@ export function HubWorkspace({
             style={{ color: "var(--fg-secondary)" }}
             className="text-xs sm:text-sm max-w-2xl"
           >
-            聚合正版游戏发行平台、开源工程基础设施、大模型官方工作台与权威技术文档库。支持实时检索、星标收藏置顶及个人自定义书签持久化管理。
+            按分类浏览游戏、开发和 AI 网站，或搜索名称、域名与标签。
           </p>
         </div>
 
@@ -445,33 +445,19 @@ export function HubWorkspace({
                 key={site.id}
                 data-site-slug={site.slug}
                 style={{ backgroundColor: "var(--bg-surface)" }}
-                className="group relative overflow-hidden rounded-xl border p-4 flex flex-col justify-between gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow] duration-200"
+                className="brand-card hub-brand group relative overflow-hidden rounded-xl border p-4 flex flex-col justify-between gap-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow] duration-200"
               >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    background: `radial-gradient(160px circle at 24px 24px, ${brand.accentHex}16, transparent 72%)`,
-                  }}
-                  className="pointer-events-none absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity"
-                />
+                <BrandCardBackdrop brand={brand} />
                 <div className="relative space-y-2.5">
                   {/* 卡片首行：品牌渐变方块、名称与操作 */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
-                      <a
-                        href={site.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`打开 ${site.name}`}
-                        className="shrink-0 rounded-xl"
-                      >
-                        <SiteBrandMark
-                          slug={site.slug}
-                          domain={site.domain}
-                          name={site.name}
-                          size="lg"
-                        />
-                      </a>
+                      <span
+                        aria-hidden="true"
+                        data-brand-swatch={brand.brandKey}
+                        style={{ backgroundImage: brand.gradient }}
+                        className="size-11 shrink-0 rounded-xl border border-white/30 shadow-sm"
+                      />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <a

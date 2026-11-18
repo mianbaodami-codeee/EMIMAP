@@ -34,7 +34,9 @@ test.describe("第二阶段：全球地图与 AI 空间分析 + AI 自主资源�
     await page
       .locator("#geo-ai-question-input")
       .fill("分析该区域的海缆通信与主机游戏研发产业区位特征");
+    const analysis = page.waitForResponse(r => r.url().endsWith("/api/geo/analyze") && r.request().method() === "POST");
     await page.locator("#geo-ai-ask-btn").click();
+    expect((await analysis).ok()).toBe(true);
 
     await expect(page.locator("#geo-result-measured")).toBeVisible();
     await expect(page.locator("#geo-result-verified")).toBeVisible();
@@ -75,8 +77,10 @@ test.describe("第二阶段：全球地图与 AI 空间分析 + AI 自主资源�
     );
 
     // 2. 检索开源工具 scrcpy 并核验官方仓库链接
+    const search = page.waitForResponse(r => r.url().endsWith("/api/discover/search") && r.request().method() === "POST");
     await page.locator("#discover-query-input").fill("Android 投屏开源工具 scrcpy");
     await page.locator("#discover-submit-btn").click();
+    expect((await search).ok()).toBe(true);
     await expect(page.locator("#discover-results-grid")).toContainText(
       "Genymobile/scrcpy"
     );

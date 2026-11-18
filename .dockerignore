@@ -8,3 +8,15 @@ apps/web/playwright-report
 .env.local
 data
 *.log
+
+**/node_modules
+**/.env*
+!**/.env.example
+apps/web/public/maplibre
+**/*.tsbuildinfo
+README.md
+docs
+deploy
+.github
+Dockerfile
+docker-compose.yml

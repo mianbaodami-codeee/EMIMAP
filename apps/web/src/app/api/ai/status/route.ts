@@ -1,3 +1,4 @@
+import { isAdmin } from "@/lib/admin/session";
 import { NextRequest } from "next/server";
 import {
   TestAIConnectionSchema,
@@ -20,6 +21,7 @@ export const dynamic = "force-dynamic";
  * 返回服务端统一 AI 网关就绪状态，严禁在响应中包含任何服务端密钥明文或掩码片段。
  */
 export async function GET() {
+  if (!(await isAdmin())) return Response.json({ ok: false }, { status: 403, headers: { "Cache-Control": "private, no-store" } });
   const startedAt = Date.now();
   const status: AIGatewayStatus = {
     openaiServerReady: Boolean((process.env.OPENAI_API_KEY || "").trim()),

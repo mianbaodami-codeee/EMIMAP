@@ -164,3 +164,50 @@ html.theme-switching *::after {
   background: var(--border-strong);
   border-radius: 9999px;
 }
+
+/* 两个主题共享品牌色，遮罩保证白色文字与渐变浅色端的对比度。 */
+.brand-card {
+  isolation: isolate;
+  --fg-primary: #fff;
+  --fg-secondary: #f1f5f9;
+  --fg-muted: #e1e9f3;
+  --accent-primary: #fff;
+  --bg-subtle: rgb(10 20 34 / 42%);
+  --border-subtle: rgb(255 255 255 / 24%);
+  color: white;
+}
+.brand-card-surface, .brand-card-surface::after {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.brand-card-surface { z-index: -1; overflow: hidden; }
+.brand-card-surface::after {
+  content: ""; background: linear-gradient(105deg, rgb(8 15 28 / 64%), rgb(8 15 28 / 32%) 65%, rgb(8 15 28 / 42%));
+}
+.brand-watermark {
+  color: white; position: absolute; right: -4%; bottom: -15%; width: 48%; height: 120%; opacity: .33;
+  transform: rotate(-9deg);
+}
+.quick-brand { min-height: 92px; }
+.hub-brand { min-height: 170px; }
+.brand-card:focus-within { outline: 2px solid var(--border-strong); outline-offset: 2px; }
+.workbench-hero {
+  position: relative; overflow: hidden; isolation: isolate; border-radius: 20px;
+  padding: clamp(1.5rem, 4.5vw, 4rem); color: #fff; background: #123346;
+}
+.workbench-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(90deg,#102e40 6%,rgb(16 46 64 / 95%) 38%,rgb(16 46 64 / 15%)), url("/atlas/world.svg") right center / auto 125% no-repeat;
+}
+.hero-content { max-width: 39rem; }
+.hero-content h1 { font-size: clamp(1.75rem,3.6vw,3.15rem); line-height: 1.16; font-weight: 660; letter-spacing: -.036em; text-wrap: balance; }
+.hero-content p { margin: 1rem 0 1.65rem; color: #d6e8ed; line-height: 1.7; }
+.hero-primary,.hero-secondary { display:inline-flex; align-items:center; gap:.55rem; padding:.65rem .95rem; border-radius:.6rem; font-weight:600; font-size:.87rem; }
+.hero-primary { background:#e8f7f8; color:#103347; }
+.hero-secondary { color:white; border:1px solid #80a2af; background:#143346; }
+.account-panel { max-width: 32rem; margin: 4rem auto; padding: 2rem; border:1px solid var(--border-subtle); border-radius: 1rem; background:var(--bg-surface); }
+.account-panel h1 { font-size:1.65rem; font-weight:650; margin-bottom:1.5rem; }
+.account-panel form,.account-panel label { display:grid; gap:.65rem; }
+.account-panel form { gap:1.25rem; }
+.account-panel input,.account-panel button { border:1px solid var(--border-subtle); border-radius:.5rem; padding:.6rem .8rem; }
+.account-panel button { background:var(--accent-primary); color:var(--accent-foreground); }
+.account-panel dl { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:1.5rem; }

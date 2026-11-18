@@ -1,138 +1,51 @@
+import { isAdmin } from "@/lib/admin/session";
 import React from "react";
 import Link from "next/link";
-import { count, eq } from "drizzle-orm";
-import { ArrowRight, ArrowUpRight, Compass, Database, Shield } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Compass, Shield } from "lucide-react";
 import { PLATFORM_MODULES, PROVENANCE_META, type ProvenanceKind } from "@omnikit/shared";
-import { getReadyDb } from "@/lib/db/client";
-import { siteBookmarks } from "@/lib/db/schema";
 import { BUILTIN_SITE_SEEDS } from "@/lib/db/seed-sites";
-import { getCacheStore } from "@/lib/cache/store";
 import { ModuleIcon } from "@/components/ui/module-icon";
 import { ProvenanceBadge } from "@/components/ui/provenance-badge";
 import {
   resolveSiteBrandAppearance,
+  BrandCardBackdrop,
   SiteBrandMark,
 } from "@/components/ui/site-brand-mark";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  // 真实查询数据库与缓存状态，拒绝任何硬编码假遥测指标
-  const t0 = Date.now();
-  const { db, driver } = await getReadyDb();
-  const [siteCountRow] = await db
-    .select({ value: count() })
-    .from(siteBookmarks)
-    .where(eq(siteBookmarks.isBuiltin, true));
-  const dbQueryMs = Math.max(1, Date.now() - t0);
-  const builtinTotal = Number(siteCountRow?.value ?? 0);
-  const cacheDriver = getCacheStore().driver;
-
+  const admin = await isAdmin();
+  const builtinTotal = BUILTIN_SITE_SEEDS.length;
   const coreModules = PLATFORM_MODULES.filter((m) => m.id !== "overview");
   const featuredSites = BUILTIN_SITE_SEEDS.slice(0, 10);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-7 space-y-8">
-      {/* 顶部主标题与核心动作区 */}
-      <section className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b">
-        <div className="space-y-2.5 max-w-3xl">
-          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-            AI 驱动的跨平台工程与硬件工具中枢
-          </h1>
-          <p
-            style={{ color: "var(--fg-secondary)" }}
-            className="text-sm sm:text-base leading-relaxed"
-          >
-            面向开发者、硬件玩家与多设备用户的长期软件工程平台。整合全球空间地理分析、可溯源 AI 资源检索、Windows/Android 实测诊断、原生系统客户端「基米大师」与跨设备协同「玩机器」。
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0 text-xs">
-          <Link
-            id="hero-open-hub"
-            href="/hub"
-            style={{
-              backgroundColor: "var(--accent-primary)",
-              color: "var(--accent-foreground)",
-            }}
-            className="h-9 px-4 rounded-md font-medium inline-flex items-center gap-2 hover:opacity-95 transition-opacity"
-          >
-            <Compass className="h-4 w-4" />
-            <span>进入常用网址导引 ({builtinTotal}+)</span>
-          </Link>
-
-          <a
-            href="/api/health"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ backgroundColor: "var(--bg-surface)" }}
-            className="h-9 px-3.5 rounded-md border font-mono inline-flex items-center gap-1.5 hover:bg-[var(--bg-subtle)] transition-colors"
-          >
-            <Database className="h-3.5 w-3.5" />
-            <span>/api/health</span>
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </a>
-        </div>
-      </section>
-
-      {/* 服务端实测系统底座遥测条 */}
-      <section
-        aria-label="系统基础设施实测状态"
-        style={{ backgroundColor: "var(--bg-surface)" }}
-        className="rounded-lg border grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x"
-      >
-        <div className="p-4 space-y-1">
-          <div style={{ color: "var(--fg-muted)" }} className="text-xs">
-            数据库引擎 (实测连通)
-          </div>
-          <div className="text-sm font-mono font-semibold tabular-nums">
-            PostgreSQL ({driver}) · {dbQueryMs}ms
-          </div>
-        </div>
-
-        <div className="p-4 space-y-1">
-          <div style={{ color: "var(--fg-muted)" }} className="text-xs">
-            缓存与限流驱动
-          </div>
-          <div className="text-sm font-mono font-semibold">
-            {cacheDriver === "redis" ? "Redis 7 Cluster" : "Memory TTL-LRU"}
-          </div>
-        </div>
-
-        <div className="p-4 space-y-1">
-          <div style={{ color: "var(--fg-muted)" }} className="text-xs">
-            权威导航种子库
-          </div>
-          <div className="text-sm font-mono font-semibold tabular-nums">
-            {builtinTotal} 个已核验站点
-          </div>
-        </div>
-
-        <div className="p-4 space-y-1">
-          <div style={{ color: "var(--fg-muted)" }} className="text-xs">
-            统一大模型网关
-          </div>
-          <div className="text-sm font-mono font-semibold">
-            OpenAI / Gemini (支持 BYOK)
+      {admin && <Link href="/admin" className="text-sm underline">管理员面板</Link>}
+      <section className="workbench-hero">
+        <div className="hero-content">
+          <h1>AI 驱动的跨平台工程与硬件工具中枢</h1>
+          <p>在世界地图上探索地点，查找有出处的资源，收藏常用工具。</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/map" className="hero-primary"><Compass size={16} />探索全球地图</Link>
+            <Link id="hero-open-hub" href="/hub" className="hero-secondary">网址导引 · {builtinTotal}<ArrowRight size={15} /></Link>
           </div>
         </div>
       </section>
-
       {/* 十大核心权威站点速达矩阵 */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold">核心网站一键直达</h2>
-            <p style={{ color: "var(--fg-muted)" }} className="text-xs">
-              初始必选的 10 大游戏、开源、AI 与官方开发者入口，更多站点、分类搜索与自定义管理请前往导引中心
-            </p>
+            <h2 className="text-base font-semibold">常用网站</h2>
+
           </div>
           <Link
             href="/hub"
             style={{ color: "var(--accent-primary)" }}
             className="text-xs font-medium inline-flex items-center gap-1 hover:underline shrink-0"
           >
-            <span>全部导引与自定义收藏</span>
+            <span>查看全部</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -151,15 +64,9 @@ export default async function HomePage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ backgroundColor: "var(--bg-surface)" }}
-                className="group relative overflow-hidden rounded-xl border p-3 flex items-center justify-between gap-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_10px_24px_-10px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow] duration-200"
+                className="brand-card quick-brand group relative overflow-hidden rounded-xl border p-3 flex items-center justify-between gap-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_10px_24px_-10px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow] duration-200"
               >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    background: `radial-gradient(120px circle at 16px 16px, ${brand.accentHex}18, transparent 72%)`,
-                  }}
-                  className="pointer-events-none absolute inset-0 opacity-75 group-hover:opacity-100 transition-opacity"
-                />
+                <BrandCardBackdrop brand={brand} />
                 <div className="relative flex items-center gap-2.5 min-w-0">
                   <SiteBrandMark
                     slug={site.slug}
@@ -193,17 +100,10 @@ export default async function HomePage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-semibold">七大核心工程板块矩阵</h2>
-            <p style={{ color: "var(--fg-muted)" }} className="text-xs">
-              按技术依赖分五阶段演进交付，清晰界定浏览器可执行范围与本地原生客户端权限边界
-            </p>
+            <h2 className="text-base font-semibold">工具工作台</h2>
+
           </div>
-          <span
-            style={{ color: "var(--fg-muted)" }}
-            className="text-xs font-mono"
-          >
-            提示：将鼠标移至左侧窄导轨即可弹出完整导航菜单
-          </span>
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5">

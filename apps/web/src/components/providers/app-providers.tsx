@@ -11,7 +11,6 @@ import React, {
 } from "react";
 import {
   ClientAISettingsSchema,
-  type AIGatewayStatus,
   type ClientAISettings,
 } from "@omnikit/shared";
 
@@ -29,7 +28,6 @@ interface AppUIContextValue {
   restoreAiDrawerTriggerFocus: () => void;
   aiSettings: ClientAISettings;
   updateAiSettings: (patch: Partial<ClientAISettings>) => void;
-  serverAiStatus: AIGatewayStatus | null;
   bridgeState: LocalBridgeState;
   probeLocalBridge: () => Promise<void>;
 }
@@ -47,8 +45,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
   const aiDrawerTriggerRef = useRef<HTMLElement | null>(null);
   const [aiSettings, setAiSettings] =
     useState<ClientAISettings>(DEFAULT_SETTINGS);
-  const [serverAiStatus, setServerAiStatus] =
-    useState<AIGatewayStatus | null>(null);
   const [bridgeState, setBridgeState] = useState<LocalBridgeState>("web_only");
 
   const setAiDrawerOpen = useCallback((open: boolean) => {
@@ -103,22 +99,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     } catch {
       // 忽略隐私无痕窗口的存储异常
     }
-  }, []);
-
-  // 拉取服务端统一 AI 网关可用状态（不含任何密钥值）
-  useEffect(() => {
-    let active = true;
-    fetch("/api/ai/status")
-      .then((r) => r.json())
-      .then((payload) => {
-        if (active && payload?.ok && payload.data) {
-          setServerAiStatus(payload.data as AIGatewayStatus);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
   }, []);
 
   // 全局监听 Cmd/Ctrl + K 打开快捷命令面板
@@ -203,7 +183,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       restoreAiDrawerTriggerFocus,
       aiSettings,
       updateAiSettings,
-      serverAiStatus,
       bridgeState,
       probeLocalBridge,
     }),
@@ -217,7 +196,6 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       restoreAiDrawerTriggerFocus,
       aiSettings,
       updateAiSettings,
-      serverAiStatus,
       bridgeState,
       probeLocalBridge,
     ]
