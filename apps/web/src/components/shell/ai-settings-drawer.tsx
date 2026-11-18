@@ -39,7 +39,8 @@ function getFocusableElements(container: HTMLElement | null): HTMLElement[] {
 
 type ConnectionUiState =
   | {
-      kind: "success" | "warning";
+      kind: "result";
+      tone: "success" | "warning" | "danger";
       data: AIConnectionCheckResult;
     }
   | {
@@ -168,8 +169,15 @@ export function AISettingsDrawer() {
       const payload = await res.json();
       if (payload.ok && payload.data) {
         const checkData = payload.data as AIConnectionCheckResult;
+        const tone =
+          checkData.modelStatus === "confirmed"
+            ? "success"
+            : checkData.endpointReachable
+            ? "warning"
+            : "danger";
         setTestState({
-          kind: checkData.modelAvailable ? "success" : "warning",
+          kind: "result",
+          tone,
           data: checkData,
         });
       } else {
@@ -467,7 +475,7 @@ export function AISettingsDrawer() {
               <span>服务端点连通性检查</span>
             </button>
             <p style={{ color: "var(--fg-muted)" }} className="leading-relaxed">
-              说明：该检查分两步核验「服务端点网络与密钥鉴权可达」及「目标模型名称是否存在于端点模型列表」，不消耗推理生成 Token。
+              说明：仅允许公网 HTTPS 直连端点（禁止重定向与非公网地址）；模型检查结果严格区分「已确认」「未找到（404）」与「无法确认（HTML/无效 JSON/超时/503 等）」，不消耗推理 Token。
             </p>
 
             {testState && (
@@ -476,21 +484,24 @@ export function AISettingsDrawer() {
                 role="status"
                 style={{
                   backgroundColor:
-                    testState.kind === "success"
+                    testState.kind === "result" && testState.tone === "success"
                       ? "var(--status-measured-bg)"
-                      : testState.kind === "warning"
+                      : testState.kind === "result" &&
+                        testState.tone === "warning"
                       ? "var(--status-verified-bg)"
                       : "var(--danger-bg)",
                   borderColor:
-                    testState.kind === "success"
+                    testState.kind === "result" && testState.tone === "success"
                       ? "var(--status-measured-border)"
-                      : testState.kind === "warning"
+                      : testState.kind === "result" &&
+                        testState.tone === "warning"
                       ? "var(--status-verified-border)"
                       : "var(--danger-border)",
                   color:
-                    testState.kind === "success"
+                    testState.kind === "result" && testState.tone === "success"
                       ? "var(--status-measured-fg)"
-                      : testState.kind === "warning"
+                      : testState.kind === "result" &&
+                        testState.tone === "warning"
                       ? "var(--status-verified-fg)"
                       : "var(--danger-fg)",
                 }}
@@ -500,28 +511,35 @@ export function AISettingsDrawer() {
                   <div className="flex items-start gap-2">
                     <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-semibold">端点不可达或已被拦截</div>
+                      <div className="font-semibold">安全策略拦截或配置无效</div>
                       <div className="mt-0.5">{testState.message}</div>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-start gap-2">
-                    {testState.kind === "success" ? (
+                    {testState.tone === "success" ? (
                       <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                    ) : (
+                    ) : testState.tone === "warning" ? (
                       <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    ) : (
+                      <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
                     )}
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="font-semibold">{testState.data.message}</div>
                       <div className="font-mono text-[11px] flex flex-wrap gap-x-3 gap-y-1 opacity-90">
                         <span>
-                          端点状态：可达 ({testState.data.latencyMs}ms)
+                          端点状态：
+                          {testState.data.endpointReachable
+                            ? `有效 API 响应 (${testState.data.latencyMs}ms)`
+                            : "未通过有效 API 校验"}
                         </span>
                         <span>
                           模型状态：
-                          {testState.data.modelAvailable
-                            ? "已确认在列表中"
-                            : "未在端点列表中找到"}
+                          {testState.data.modelStatus === "confirmed"
+                            ? "已确认"
+                            : testState.data.modelStatus === "not_found"
+                            ? "未找到（404）"
+                            : "无法确认"}
                         </span>
                         <span>
                           密钥来源：

@@ -30,14 +30,26 @@ export const TestAIConnectionSchema = z.object({
 
 export type TestAIConnectionInput = z.infer<typeof TestAIConnectionSchema>;
 
+export type AIModelVerificationStatus =
+  | "confirmed"
+  | "not_found"
+  | "unverifiable";
+
 export interface AIConnectionCheckResult {
   provider: AIProviderId;
   /** 兼容布尔字段（同 endpointReachable） */
   reachable: boolean;
-  /** 服务端点是否网络可达且通过 API Key 鉴权 */
+  /** 服务端点是否返回了有效的受保护 API 响应（普通 HTML 页面 HTTP 200 不视为 true） */
   endpointReachable: boolean;
-  /** 用户指定的模型名称是否在该端点模型列表或模型元数据中确认存在 */
+  /** 仅当 modelStatus === "confirmed" 时为 true */
   modelAvailable: boolean;
+  /**
+   * 模型检查明确三态：
+   * - confirmed：返回有效 API 响应，且模型元数据匹配
+   * - not_found：模型查询明确返回 404（有效 API 错误响应）
+   * - unverifiable：返回 HTML、无效 JSON、超时、503 或其他服务异常
+   */
+  modelStatus: AIModelVerificationStatus;
   /** 本次检查的目标模型名称 */
   model: string;
   /** 本次检查实际使用的密钥来源（绝不包含密钥值） */

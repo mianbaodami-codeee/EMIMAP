@@ -232,4 +232,109 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       await expect(sidebarTrigger).toBeFocused();
     }
   });
+
+  test("AI 连接检查网络边界拦截（HTTP / 内网 IP）与模型三态（已确认 / 未找到 / 无法确认）界面提示回归测试", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.locator("#header-ai-trigger").click();
+    const drawer = page.locator("#ai-settings-drawer");
+    await expect(drawer).toBeVisible();
+
+    const keyInput = page.locator("#input-openai-key");
+    const baseInput = page.locator("#input-openai-base");
+    const testBtn = page.locator("#btn-test-ai-connection");
+    const resultBox = page.locator("#ai-connection-test-result");
+
+    // 1. 真实后端拦截明文 http:// 端点
+    await keyInput.fill("sk-e2e-personal-key");
+    await baseInput.fill("http://example.com/v1");
+    await testBtn.click();
+    await expect(resultBox).toContainText("HTTPS");
+
+    // 2. 真实后端拦截非公网回环地址 https://127.0.0.1/v1
+    await baseInput.fill("https://127.0.0.1/v1");
+    await testBtn.click();
+    await expect(resultBox).toContainText("安全策略已拦截");
+
+    // 3. 验证前端界面准确呈现「无法确认」「未找到（404）」「已确认」三种模型检查状态
+    let mockStage: "unverifiable" | "not_found" | "confirmed" = "unverifiable";
+    await page.route("**/api/ai/status", async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.continue();
+        return;
+      }
+      const payloads = {
+        unverifiable: {
+          ok: true,
+          data: {
+            provider: "openai",
+            reachable: false,
+            endpointReachable: false,
+            modelAvailable: false,
+            modelStatus: "unverifiable",
+            model: "gpt-4o-mini",
+            keySource: "user",
+            checkedEndpoint: "https://example.com/v1",
+            latencyMs: 35,
+            message:
+              "无法确认：目标地址返回了普通 HTML 页面而非有效 API 响应，未通过端点与鉴权校验",
+          },
+        },
+        not_found: {
+          ok: true,
+          data: {
+            provider: "openai",
+            reachable: true,
+            endpointReachable: true,
+            modelAvailable: false,
+            modelStatus: "not_found",
+            model: "gpt-nonexistent",
+            keySource: "user",
+            checkedEndpoint: "https://api.openai.com/v1",
+            latencyMs: 48,
+            message:
+              '未找到：服务端点有效，但模型查询明确返回 404（未找到模型 "gpt-nonexistent"）',
+          },
+        },
+        confirmed: {
+          ok: true,
+          data: {
+            provider: "openai",
+            reachable: true,
+            endpointReachable: true,
+            modelAvailable: true,
+            modelStatus: "confirmed",
+            model: "gpt-4o-mini",
+            keySource: "user",
+            checkedEndpoint: "https://api.openai.com/v1",
+            latencyMs: 52,
+            message:
+              '已确认：服务端点返回有效 API 响应，且模型 "gpt-4o-mini" 元数据匹配',
+          },
+        },
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(payloads[mockStage]),
+      });
+    });
+
+    await baseInput.fill("https://example.com/v1");
+    await testBtn.click();
+    await expect(resultBox).toContainText("未通过有效 API 校验");
+    await expect(resultBox).toContainText("模型状态：无法确认");
+
+    mockStage = "not_found";
+    await testBtn.click();
+    await expect(resultBox).toContainText("有效 API 响应");
+    await expect(resultBox).toContainText("模型状态：未找到（404）");
+
+    mockStage = "confirmed";
+    await testBtn.click();
+    await expect(resultBox).toContainText("有效 API 响应");
+    await expect(resultBox).toContainText("模型状态：已确认");
+  });
 });
+
