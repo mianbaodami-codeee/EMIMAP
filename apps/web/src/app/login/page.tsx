@@ -6,7 +6,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (await isAdmin()) redirect("/admin");
   const { error } = await searchParams;
   return <section className="account-panel">
-    <h1>账号登录</h1>
+    <h1 className="workspace-title">账号登录</h1>
+    <p className="workspace-description">使用管理员账号登录完整服务。</p>
     <form action={login}>
       <label>账号<input name="username" autoComplete="username" required /></label>
       <label>密码<input name="password" type="password" autoComplete="current-password" required /></label>

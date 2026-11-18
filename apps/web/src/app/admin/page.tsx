@@ -6,7 +6,8 @@ export default async function AdminPage() {
   const report = await readAdminReport();
   if (!report) redirect("/login");
   return <section className="account-panel">
-    <h1>管理员面板</h1>
+    <h1 className="workspace-title">管理员面板</h1>
+    <p className="workspace-description">查看数据库、缓存和服务端模型配置状态。</p>
     <dl>
       <dt>数据库</dt><dd>{report.database.driver} · {report.database.latencyMs} ms</dd>
       <dt>缓存</dt><dd>{report.cache.driver}</dd>

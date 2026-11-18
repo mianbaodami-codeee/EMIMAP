@@ -196,17 +196,14 @@ export function HubWorkspace({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+    <div className="workspace-frame space-y-5">
       {/* 页面主标题与操作栏 */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b">
+      <div className="workspace-heading flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
+          <h1 className="workspace-title">
             常用网址导引
           </h1>
-          <p
-            style={{ color: "var(--fg-secondary)" }}
-            className="text-xs sm:text-sm max-w-2xl"
-          >
+          <p className="workspace-description">
             按分类浏览游戏、开发和 AI 网站，或搜索名称、域名与标签。
           </p>
         </div>

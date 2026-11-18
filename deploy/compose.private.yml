@@ -1,0 +1,22 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      OMNIKIT_SITE_ADDRESS: ${OMNIKIT_SITE_ADDRESS:?Set the private preview domain}
+      OMNIKIT_PREVIEW_USER: ${OMNIKIT_PREVIEW_USER:-review}
+      OMNIKIT_PREVIEW_PASSWORD_HASH: ${OMNIKIT_PREVIEW_PASSWORD_HASH:?Set a Caddy password hash}
+    volumes:
+      - ./deploy/Caddyfile.private:/etc/caddy/Caddyfile:ro
+      - omnikit_caddy_data:/data
+      - omnikit_caddy_config:/config
+
+volumes:
+  omnikit_caddy_data:
+  omnikit_caddy_config:

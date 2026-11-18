@@ -17,11 +17,11 @@ const features = [
 
 export default function JimiMasterPage() {
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
-      <header className="bench-hero grid items-center gap-6 rounded-3xl border p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr]">
+    <div className="workspace-frame workspace-compact space-y-5">
+      <header className="workspace-heading grid items-center gap-6 lg:grid-cols-[1.2fr_1fr]">
         <div>
           <p className="mb-2 inline-flex items-center gap-2 text-sm font-semibold text-[var(--accent-primary)]"><Wrench className="size-4" />Windows 原生客户端</p>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">基米大师</h1>
+          <h1 className="workspace-title">基米大师</h1>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-[var(--fg-secondary)]">查看设备和性能，诊断网络，管理常用系统配置。操作发起前可查看影响和回滚方式。</p>
           <Link href="/windows-bench" className="mt-4 inline-flex items-center gap-2 rounded-lg border bg-[var(--bg-surface)] px-3 py-2 text-sm font-medium hover:bg-[var(--bg-hover)]">打开浏览器测试 <ArrowUpRight className="size-4" /></Link>
         </div>
@@ -29,7 +29,7 @@ export default function JimiMasterPage() {
           <h2 className="text-base font-semibold" id="jimi-download">Windows x64 测试包</h2>
           <p className="mt-2 text-sm text-[var(--fg-secondary)]">版本 {release.version} · {Math.ceil(release.size / 1024)} KiB · 未签名</p>
           <div className="my-4 flex flex-wrap items-center gap-3">
-            <a href={`/downloads/${release.file}`} download className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold !text-white hover:opacity-90">
+            <a href={`/downloads/${release.file}`} download className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] px-4 py-2 text-sm font-semibold !text-[var(--accent-foreground)] hover:opacity-90">
               <Download size={16} />下载 ZIP
             </a>
             <a target="_blank" rel="noopener noreferrer" href="https://dotnet.microsoft.com/en-us/download/dotnet/8.0" className="text-sm text-[var(--accent-primary)] underline">.NET 8 桌面运行时</a>

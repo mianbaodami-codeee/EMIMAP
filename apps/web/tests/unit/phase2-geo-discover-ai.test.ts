@@ -208,6 +208,12 @@ describe("第二阶段：全球地图逆地理编码、地点收藏隔离与三�
     });
     expect(rev.country).toBe("日本");
     expect(rev.nearbyPois.length).toBeGreaterThan(0);
+
+    const adjacent = await reverseGeocodeCoordinate(35.676281, 139.650397, {
+      httpsGet: offlineGet,
+    });
+    expect(adjacent.latitude).toBe(35.676281);
+    expect(adjacent.longitude).toBe(139.650397);
   });
 
   it("支持收藏地点持久化 CRUD 且严格隔离不同匿名工作区数据", async () => {

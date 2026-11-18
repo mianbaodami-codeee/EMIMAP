@@ -184,31 +184,12 @@ export function DiscoverWorkspace({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
+    <div className="workspace-frame space-y-5">
       {/* 页面主标题与操作栏 */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-4 border-b">
+      <div className="workspace-heading flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
-              AI 自主资源寻找代理
-            </h1>
-            <span
-              style={{
-                color: "var(--status-measured-fg)",
-                backgroundColor: "var(--status-measured-bg)",
-                borderColor: "var(--status-measured-border)",
-              }}
-              className="px-2 py-0.5 rounded border text-[11px] font-mono"
-            >
-              Phase 2 · Verified Agent
-            </span>
-          </div>
-          <p
-            style={{ color: "var(--fg-secondary)" }}
-            className="text-xs sm:text-sm max-w-3xl"
-          >
-            自主拆解检索需求、并发查询公开权威接口与核验索引，为您定位正版游戏发行商店、开源代码仓库、开发工具链与第一方官方文档，并逐项附带官方性依据与安全注意事项。
-          </p>
+          <h1 className="workspace-title">AI 自主资源寻找代理</h1>
+          <p className="workspace-description">查找游戏、开源软件和官方文档，核对结果的来源与更新时间。</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs shrink-0">

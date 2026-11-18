@@ -1,0 +1,18 @@
+{$OMNIKIT_SITE_ADDRESS} {
+    encode zstd gzip
+
+    # 保护页面、静态资源、下载和 API。Admin 权限仍由应用内登录管理。
+    basic_auth {
+        {$OMNIKIT_PREVIEW_USER:review} {$OMNIKIT_PREVIEW_PASSWORD_HASH}
+    }
+
+    header {
+        X-Robots-Tag "noindex, nofollow, noarchive"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    reverse_proxy web:3000 {
+        header_up -Authorization
+    }
+}

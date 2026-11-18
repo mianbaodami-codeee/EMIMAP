@@ -35,7 +35,7 @@
 
 完整服务通过 `/login` 登录，唯一管理账号为 `Admin`。部署者在服务器设置至少 16 字符的随机 `ADMIN_PASSWORD` 后重启服务。密码留空时关闭管理登录，无默认密码。管理接口与页面逐次验证服务端会话；退出、密码轮换或八小时超时会使会话失效。多实例部署请配置共享 Redis。个人模型设置及个人地点收藏仍属于各访客的工作区。
 
-世界地图首先显示随应用发布的 Natural Earth 1:110m 国界与海岸线；WebGL 就绪后切换到交互画布，放大后可加载 OpenStreetMap 街道瓦片。无法使用 WebGL 时可以拖动、缩放矢量底图并选择坐标。审阅版可离线查找内置地点，完整联网分析需运行后端。
+世界地图首先显示随应用发布的 Natural Earth 国界与海岸线；WebGL 就绪后切换至含比例尺的 1:50m 交互底图。点击「街道视角」可放大至选中位置并请求 OpenStreetMap 瓦片。无法使用 WebGL 时仍可拖动、缩放矢量底图并选择坐标。坐标以 WGS84 显示，可直接复制。审阅版可离线查找内置地点，完整联网分析需运行后端。
 
 底图数据取自 [Natural Earth](https://www.naturalearthdata.com/about/terms-of-use/)，采用公有领域数据。品牌轮廓部分取自 [Simple Icons 11.15](https://github.com/simple-icons/simple-icons/tree/11.15.0)，品牌标识归各权利人所有。
 

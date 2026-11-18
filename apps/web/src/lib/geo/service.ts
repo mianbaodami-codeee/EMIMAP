@@ -154,9 +154,13 @@ export async function searchGeoPlaces(
 
   const httpsGet = options?.httpsGet ?? upstreamTransport.httpsGet;
   const localMatches = searchBuiltinGazetteer(q);
+  if (localMatches[0]?.countryCode === "WGS84") return [localMatches[0]];
   const liveMatches: GeoSearchCandidate[] = [];
 
   try {
+    if (!options?.httpsGet && !(await cache.checkRateLimit("geo:nominatim", 1, 1)).allowed) {
+      return localMatches;
+    }
     const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&q=${encodeURIComponent(
       q
     )}`;
@@ -251,9 +255,10 @@ export async function reverseGeocodeCoordinate(
   rawLon: number,
   options?: { httpsGet?: HttpsGetFn }
 ): Promise<ReverseGeocodeResult> {
-  const latitude = Number(rawLat.toFixed(5));
-  const longitude = Number(rawLon.toFixed(5));
-  const cacheKey = `geo:rev:${latitude.toFixed(3)}:${longitude.toFixed(3)}`;
+  const latitude = Number(rawLat.toFixed(6));
+  const longitude = Number(rawLon.toFixed(6));
+  // 邻近坐标可能分属两栋建筑，缓存按完整坐标保存。
+  const cacheKey = `geo:rev:v2:${latitude}:${longitude}`;
   const cache = getCacheStore();
   const cached = await cache.get<ReverseGeocodeResult>(cacheKey);
   if (cached) return cached;
@@ -272,59 +277,62 @@ export async function reverseGeocodeCoordinate(
     source: "builtin_gazetteer",
   }));
 
+  const canQueryLive = options?.httpsGet || (await cache.checkRateLimit("geo:nominatim", 1, 1)).allowed;
   try {
-    const revUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=12&addressdetails=1&lat=${latitude}&lon=${longitude}`;
-    const resp = await httpsGet(revUrl, {
-      headers: {
-        "User-Agent": GEO_USER_AGENT,
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-      },
-      timeoutMs: GEO_HTTP_TIMEOUT_MS,
-    });
+    if (canQueryLive) {
+      const revUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=18&addressdetails=1&lat=${latitude}&lon=${longitude}`;
+      const resp = await httpsGet(revUrl, {
+        headers: {
+          "User-Agent": GEO_USER_AGENT,
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        },
+        timeoutMs: GEO_HTTP_TIMEOUT_MS,
+      });
 
-    if (resp.status === 200) {
-      const data = JSON.parse(resp.body) as Record<string, unknown>;
-      if (data && typeof data === "object" && !data.error) {
-        const addr =
-          (data.address as Record<string, string | undefined> | undefined) || {};
-        const city =
-          addr.city ||
-          addr.town ||
-          addr.county ||
-          addr.municipality ||
-          addr.village ||
-          "";
-        const adminArea = addr.state || addr.province || addr.region || city || "行政辖区";
-        const country = addr.country || "国际区域";
-        const countryCode = (addr.country_code || "OSM").toUpperCase();
-        const primaryName =
-          String(data.name || "").trim() ||
-          city ||
-          adminArea ||
-          `${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°`;
+      if (resp.status === 200) {
+        const data = JSON.parse(resp.body) as Record<string, unknown>;
+        if (data && typeof data === "object" && !data.error) {
+          const addr =
+            (data.address as Record<string, string | undefined> | undefined) || {};
+          const city =
+            addr.city ||
+            addr.town ||
+            addr.county ||
+            addr.municipality ||
+            addr.village ||
+            "";
+          const adminArea = addr.state || addr.province || addr.region || city || "行政辖区";
+          const country = addr.country || "国际区域";
+          const countryCode = (addr.country_code || "OSM").toUpperCase();
+          const primaryName =
+            String(data.name || "").trim() ||
+            city ||
+            adminArea ||
+            `${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°`;
 
-        const liveResult: ReverseGeocodeResult = {
-          latitude,
-          longitude,
-          name: primaryName,
-          displayName: String(data.display_name || `${primaryName}, ${country}`),
-          country,
-          countryCode,
-          adminArea,
-          city: city || primaryName,
-          hemisphere: formatHemisphere(latitude, longitude),
-          timezoneEstimate: estimateSolarUtcOffset(longitude),
-          elevationOrTerrain:
-            closest && closest.distanceKm < 90
-              ? closest.entry.elevationOrTerrain
-              : undefined,
-          nearbyPois,
-          osmAttribution: OSM_ATTRIBUTION,
-          dataMode: "live_osm",
-          queriedAt: new Date().toISOString(),
-        };
-        await cache.set(cacheKey, liveResult, 600);
-        return liveResult;
+          const liveResult: ReverseGeocodeResult = {
+            latitude,
+            longitude,
+            name: primaryName,
+            displayName: String(data.display_name || `${primaryName}, ${country}`),
+            country,
+            countryCode,
+            adminArea,
+            city: city || primaryName,
+            hemisphere: formatHemisphere(latitude, longitude),
+            timezoneEstimate: estimateSolarUtcOffset(longitude),
+            elevationOrTerrain:
+              closest && closest.distanceKm < 5
+                ? closest.entry.elevationOrTerrain
+                : undefined,
+            nearbyPois,
+            osmAttribution: OSM_ATTRIBUTION,
+            dataMode: "live_osm",
+            queriedAt: new Date().toISOString(),
+          };
+          await cache.set(cacheKey, liveResult, 600);
+          return liveResult;
+        }
       }
     }
   } catch {
@@ -354,7 +362,7 @@ export async function reverseGeocodeCoordinate(
       dataMode: "local_gazetteer",
       queriedAt: new Date().toISOString(),
     };
-    await cache.set(cacheKey, fallbackNearCity, 300);
+    await cache.set(cacheKey, fallbackNearCity, canQueryLive ? 300 : 10);
     return fallbackNearCity;
   }
 
@@ -378,7 +386,7 @@ export async function reverseGeocodeCoordinate(
     dataMode: "local_gazetteer",
     queriedAt: new Date().toISOString(),
   };
-  await cache.set(cacheKey, remotePointResult, 300);
+  await cache.set(cacheKey, remotePointResult, canQueryLive ? 300 : 10);
   return remotePointResult;
 }
 

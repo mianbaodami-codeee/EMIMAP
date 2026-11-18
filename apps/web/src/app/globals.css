@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================================
  * OmniKit AI — 方向 A「精密仪器台 (Precision Instrument)」设计系统 Token
@@ -26,6 +27,9 @@ html.light {
   --accent-primary: #0369a1;
   --accent-primary-hover: #075985;
   --accent-foreground: #ffffff;
+  --map-water: #dcecf3;
+  --map-label: #183747;
+  --map-label-halo: #edf8fb;
   --accent-soft: #e0f2fe;
 
   /* 数据可信度语义色 */
@@ -72,6 +76,9 @@ html.dark {
   --accent-primary: #38bdf8;
   --accent-primary-hover: #7dd3fc;
   --accent-foreground: #082f49;
+  --map-water: #101f2e;
+  --map-label: #e2f4fb;
+  --map-label-halo: #172c39;
   --accent-soft: rgba(56, 189, 248, 0.12);
 
   /* 深色模式下柔和且高辨识度的语义色 */
@@ -190,28 +197,137 @@ html.theme-switching *::after {
 .quick-brand { min-height: 92px; }
 .hub-brand { min-height: 170px; }
 .brand-card:focus-within { outline: 2px solid var(--border-strong); outline-offset: 2px; }
+/* 工作区、地图和账户页共用主题配色与页面边距。 */
+.workspace-frame {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding: clamp(1rem, 2.4vw, 2rem) clamp(1rem, 2.6vw, 2rem);
+}
+.workspace-compact { max-width: 72rem; }
+.workspace-heading {
+  padding: clamp(1rem, 2.3vw, 1.65rem);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.1rem;
+  background: linear-gradient(115deg, var(--bg-surface) 55%, var(--accent-soft));
+}
+.workspace-title {
+  font-size: clamp(1.55rem, 2.85vw, 2.35rem);
+  font-weight: 700;
+  line-height: 1.19;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+.workspace-description {
+  color: var(--fg-secondary);
+  max-width: 62ch;
+  font-size: .875rem;
+  line-height: 1.7;
+  margin-top: .55rem;
+}
+
 .workbench-hero {
-  position: relative; overflow: hidden; isolation: isolate; border-radius: 20px;
-  padding: clamp(1.5rem, 4.5vw, 4rem); color: #fff; background: #123346;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.4rem;
+  padding: clamp(1.5rem, 4.5vw, 4rem);
+  background: var(--bg-surface);
 }
 .workbench-hero::before {
-  content: ""; position: absolute; inset: 0; z-index: -1;
-  background: linear-gradient(90deg,#102e40 6%,rgb(16 46 64 / 95%) 38%,rgb(16 46 64 / 15%)), url("/atlas/world.svg") right center / auto 125% no-repeat;
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, var(--bg-surface) 12%, color-mix(in srgb, var(--bg-surface) 94%, transparent) 44%, color-mix(in srgb, var(--accent-soft) 72%, transparent)),
+    url("/atlas/world-overview.svg") 104% center / auto 135% no-repeat, var(--accent-soft);
 }
 .hero-content { max-width: 39rem; }
-.hero-content h1 { font-size: clamp(1.75rem,3.6vw,3.15rem); line-height: 1.16; font-weight: 660; letter-spacing: -.036em; text-wrap: balance; }
-.hero-content p { margin: 1rem 0 1.65rem; color: #d6e8ed; line-height: 1.7; }
+.hero-content h1 { font-size: clamp(1.75rem,3.6vw,3.15rem); line-height: 1.16; font-weight: 700; letter-spacing: -.036em; text-wrap: balance; }
+.hero-content p { margin: 1rem 0 1.65rem; color: var(--fg-secondary); line-height: 1.7; }
 .hero-primary,.hero-secondary { display:inline-flex; align-items:center; gap:.55rem; padding:.65rem .95rem; border-radius:.6rem; font-weight:600; font-size:.87rem; }
-.hero-primary { background:#e8f7f8; color:#103347; }
-.hero-secondary { color:white; border:1px solid #80a2af; background:#143346; }
-.account-panel { max-width: 32rem; margin: 4rem auto; padding: 2rem; border:1px solid var(--border-subtle); border-radius: 1rem; background:var(--bg-surface); }
-.account-panel h1 { font-size:1.65rem; font-weight:650; margin-bottom:1.5rem; }
-.account-panel form,.account-panel label { display:grid; gap:.65rem; }
-.account-panel form { gap:1.25rem; }
-.account-panel input,.account-panel button { border:1px solid var(--border-subtle); border-radius:.5rem; padding:.6rem .8rem; }
-.account-panel button { background:var(--accent-primary); color:var(--accent-foreground); }
-.account-panel dl { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:1.5rem; }
+.hero-primary { background:var(--accent-primary); color:var(--accent-foreground); }
+.hero-primary:hover { background:var(--accent-primary-hover); }
+.hero-secondary { background:var(--bg-surface); color:var(--fg-primary); border:1px solid var(--border-strong); }
+.hero-secondary:hover { background:var(--bg-hover); }
+html.dark .brand-card-surface::after { background: linear-gradient(105deg, rgb(6 12 23 / 75%), rgb(6 12 23 / 50%) 70%, rgb(6 12 23 / 48%)); }
+html.dark .brand-watermark { opacity: .27; }
+.brand-card:focus-within { outline-color: var(--border-strong); }
 
-.bench-hero {
-  background: linear-gradient(122deg, var(--bg-surface) 32%, var(--accent-soft));
+.account-panel {
+  width: min(31rem, calc(100% - 2rem));
+  margin: clamp(1.2rem, 6vh, 4rem) auto;
+  padding: clamp(1rem, 4vw, 2rem);
+  border: 1px solid var(--border-subtle);
+  border-radius: 1.1rem;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-flyout);
+}
+.account-panel h1 { margin-bottom: .55rem; }
+.account-panel .workspace-description { margin-bottom: 1.35rem; }
+.account-panel form,.account-panel label { display:grid; gap:.55rem; }
+.account-panel form { gap:1rem; }
+.account-panel input,.account-panel button {
+  min-width: 0;
+  min-height: 2.7rem;
+  border:1px solid var(--border-strong);
+  border-radius:.6rem;
+  padding:.6rem .8rem;
+}
+.account-panel input { background: var(--bg-canvas); }
+.account-panel button { background: var(--accent-primary); color: var(--accent-foreground); font-weight: 650; }
+.account-panel label { font-size: .875rem; }
+.account-panel [role="alert"] { color: var(--danger-fg); font-size: .875rem; }
+.account-panel dl { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:.7rem; margin-bottom:1.5rem; font-size:.875rem; }
+.account-panel dt { color:var(--fg-secondary); }
+.account-panel dd { overflow-wrap:anywhere; }
+
+.atlas-canvas { height: clamp(20rem, 54vh, 36rem); background: var(--map-water); }
+.atlas-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  min-height: 2rem;
+  min-width: 2rem;
+  padding: .3rem .5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: .45rem;
+  background: var(--bg-subtle);
+  color: var(--fg-primary);
+}
+.atlas-control:hover { border-color: var(--border-strong); }
+.atlas-control:disabled { opacity: .5; cursor: not-allowed; }
+.atlas-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem 1rem;
+  color: var(--fg-secondary);
+  font-size: .72rem;
+  padding: .55rem .85rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.atlas-status a { text-decoration: underline; text-underline-offset: 2px; }
+.atlas-city-label {
+  padding: .08rem .28rem;
+  white-space: nowrap;
+  border-radius: .3rem;
+  color: var(--map-label);
+  font-size: .68rem;
+  font-weight: 650;
+  background: color-mix(in srgb, var(--map-label-halo) 90%, transparent);
+  cursor: pointer;
+}
+.atlas-city-label:hover { background: var(--map-label-halo); }
+[data-map-density="world"] [data-atlas-label="regional"],
+[data-map-density="street"] [data-atlas-label] { display: none; }
+.atlas-svg-label { fill: var(--map-label); stroke: var(--map-label-halo); stroke-width: 1.8px; paint-order: stroke; vector-effect: non-scaling-stroke; font-weight: 650; }
+.atlas-canvas .maplibregl-ctrl-scale { color: var(--fg-primary); border-color: var(--fg-secondary); background: var(--bg-elevated); border-radius: .14rem; }
+@media (max-width: 639px) {
+  .atlas-canvas { height: clamp(17rem, 49vh, 25rem); }
+  .atlas-status { padding-inline: .65rem; }
+  .atlas-control { min-height: 2.25rem; }
+  .atlas-city-label { font-size: .6rem; }
 }

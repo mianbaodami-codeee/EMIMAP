@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             backgroundColor: "var(--bg-surface)",
             borderColor: "var(--border-subtle)",
           }}
-          className="sticky top-0 z-30 h-14 border-b px-4 sm:px-6 flex items-center justify-between gap-3"
+          className="sticky top-0 z-30 min-h-14 border-b px-3 sm:px-6 flex items-center justify-between gap-2"
         >
           {/* 左侧：移动端菜单触发器 + 当前位置上下文 */}
           <div className="flex items-center gap-2.5 min-w-0">
@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="border-t px-4 sm:px-6 py-3 text-xs flex flex-wrap items-center justify-between gap-2"
         >
           <span>
-            OmniKit AI 跨平台工程工具平台 · 严格区分实测硬件/地理数据、公开联网信源与大模型推理
+            OmniKit AI · 跨平台工具工作台
           </span>
           <span className="font-mono tabular-nums">
             <a href="/login" className="hover:underline">账号登录</a>

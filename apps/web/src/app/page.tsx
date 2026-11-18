@@ -21,7 +21,7 @@ export default async function HomePage() {
   const featuredSites = BUILTIN_SITE_SEEDS.slice(0, 10);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-7 space-y-8">
+    <div className="workspace-frame space-y-8">
       {admin && <Link href="/admin" className="text-sm underline">管理员面板</Link>}
       <section className="workbench-hero">
         <div className="hero-content">
@@ -37,7 +37,7 @@ export default async function HomePage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold">常用网站</h2>
+            <h2 className="text-lg font-semibold tracking-tight">常用网站</h2>
 
           </div>
           <Link
@@ -100,7 +100,7 @@ export default async function HomePage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-semibold">工具工作台</h2>
+            <h2 className="text-lg font-semibold tracking-tight">工具工作台</h2>
 
           </div>
 

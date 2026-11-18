@@ -204,16 +204,16 @@ export function BenchWorkspace({ nodes }: { nodes: LatencyNode[] }) {
   const surface = "rounded-2xl border bg-[var(--bg-surface)] p-4 sm:p-5";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 px-4 py-6 sm:px-6 sm:py-8">
-      <header className="bench-hero rounded-3xl border px-5 py-7 sm:px-8 sm:py-9">
+    <div className="workspace-frame workspace-compact space-y-5">
+      <header className="workspace-heading">
         <div className="flex flex-wrap items-end justify-between gap-5">
           <div className="max-w-lg">
             <p className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-[var(--accent-primary)]"><Activity className="size-4" />在当前设备实测</p>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Windows 测试</h1>
+            <h1 className="workspace-title">Windows 测试</h1>
             <p className="mt-3 text-sm leading-relaxed text-[var(--fg-secondary)]">测量当前浏览器的计算、图形、内存和存储性能。查看设备型号、驱动和物理磁盘请使用基米大师。</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={control + " border-transparent bg-[var(--accent-primary)] !text-white hover:opacity-90 hover:!bg-[var(--accent-primary)]"} onClick={() => void run(suites.map(suite => suite.id))} disabled={!!active}><Play className="size-4" />{active === "suite" ? "测试进行中…" : "开始全部测试"}</button>
+            <button type="button" className={control + " border-transparent bg-[var(--accent-primary)] !text-[var(--accent-foreground)] hover:opacity-90 hover:!bg-[var(--accent-primary)]"} onClick={() => void run(suites.map(suite => suite.id))} disabled={!!active}><Play className="size-4" />{active === "suite" ? "测试进行中…" : "开始全部测试"}</button>
             <Link href="/jimi-master" className={control}>基米大师 <ArrowUpRight className="size-4" /></Link>
           </div>
         </div>
