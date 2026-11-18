@@ -22,9 +22,9 @@ html.light {
   --fg-secondary: #475569;
   --fg-muted: #64748b;
 
-  /* 工业青蓝主强调色 (高对比度深青蓝) */
-  --accent-primary: #0284c7;
-  --accent-primary-hover: #0369a1;
+  /* 工业青蓝主强调色 (高对比度深青蓝，白色前景对比度 5.93:1 通过 WCAG AA) */
+  --accent-primary: #0369a1;
+  --accent-primary-hover: #075985;
   --accent-foreground: #ffffff;
   --accent-soft: #e0f2fe;
 
@@ -66,7 +66,7 @@ html.dark {
 
   --fg-primary: #f1f5f9;
   --fg-secondary: #94a3b8;
-  --fg-muted: #64748b;
+  --fg-muted: #8395ad;
 
   /* 清澈天青蓝强调色 */
   --accent-primary: #38bdf8;

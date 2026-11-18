@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -25,6 +26,7 @@ interface AppUIContextValue {
   setCommandOpen: (open: boolean) => void;
   aiDrawerOpen: boolean;
   setAiDrawerOpen: (open: boolean) => void;
+  restoreAiDrawerTriggerFocus: () => void;
   aiSettings: ClientAISettings;
   updateAiSettings: (patch: Partial<ClientAISettings>) => void;
   serverAiStatus: AIGatewayStatus | null;
@@ -41,12 +43,42 @@ const AppUIContext = createContext<AppUIContextValue | null>(null);
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("dark");
   const [commandOpen, setCommandOpen] = useState(false);
-  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
+  const [aiDrawerOpen, setAiDrawerOpenState] = useState(false);
+  const aiDrawerTriggerRef = useRef<HTMLElement | null>(null);
   const [aiSettings, setAiSettings] =
     useState<ClientAISettings>(DEFAULT_SETTINGS);
   const [serverAiStatus, setServerAiStatus] =
     useState<AIGatewayStatus | null>(null);
   const [bridgeState, setBridgeState] = useState<LocalBridgeState>("web_only");
+
+  const setAiDrawerOpen = useCallback((open: boolean) => {
+    if (open && typeof document !== "undefined") {
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLElement &&
+        active !== document.body &&
+        !active.closest("#ai-settings-drawer")
+      ) {
+        aiDrawerTriggerRef.current = active;
+      }
+    }
+    setAiDrawerOpenState(open);
+  }, []);
+
+  const restoreAiDrawerTriggerFocus = useCallback(() => {
+    if (typeof document === "undefined") return;
+    const saved = aiDrawerTriggerRef.current;
+    if (saved && saved.isConnected && saved.getClientRects().length > 0) {
+      saved.focus();
+      return;
+    }
+    const fallback =
+      document.getElementById("header-ai-trigger") ||
+      document.getElementById("mobile-menu-trigger");
+    if (fallback && fallback.getClientRects().length > 0) {
+      fallback.focus();
+    }
+  }, []);
 
   // 初始化读取主题与本地 AI 配置
   useEffect(() => {
@@ -168,6 +200,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       setCommandOpen,
       aiDrawerOpen,
       setAiDrawerOpen,
+      restoreAiDrawerTriggerFocus,
       aiSettings,
       updateAiSettings,
       serverAiStatus,
@@ -180,6 +213,8 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       setTheme,
       commandOpen,
       aiDrawerOpen,
+      setAiDrawerOpen,
+      restoreAiDrawerTriggerFocus,
       aiSettings,
       updateAiSettings,
       serverAiStatus,

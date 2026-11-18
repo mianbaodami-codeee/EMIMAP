@@ -163,4 +163,73 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       });
     }
   });
+
+  test("AI 设置抽屉键盘无障碍回归测试：自动聚焦、Tab 循环陷阱、Esc 关闭、原入口焦点回退及端点安全拦截", async ({
+    page,
+  }, testInfo) => {
+    const isMobile = testInfo.project.name.includes("mobile");
+    await page.goto("/");
+
+    // 1. 聚焦顶栏 AI 配置入口并按 Enter 打开抽屉
+    const headerTrigger = page.locator("#header-ai-trigger");
+    await headerTrigger.focus();
+    await expect(headerTrigger).toBeFocused();
+    await page.keyboard.press("Enter");
+
+    const drawer = page.locator("#ai-settings-drawer");
+    await expect(drawer).toBeVisible();
+
+    // 2. 验证打开后焦点自动移入抽屉关闭按钮（而非停留在背景页面）
+    const closeBtn = page.locator("#ai-drawer-close");
+    await expect(closeBtn).toBeFocused();
+
+    // 3. 验证 Shift+Tab 从首个元素反向循环至抽屉最后一个可聚焦控件，再按 Tab 回到首个控件
+    await page.keyboard.press("Shift+Tab");
+    const lastBtn = page.locator("#btn-probe-bridge");
+    await expect(lastBtn).toBeFocused();
+
+    await page.keyboard.press("Tab");
+    await expect(closeBtn).toBeFocused();
+
+    // 4. 连续按 Tab 遍历整圈，确保每一步焦点都严格限制在抽屉内部
+    for (let step = 0; step < 12; step += 1) {
+      await page.keyboard.press("Tab");
+      const insideDrawer = await page.evaluate(() => {
+        const panel = document.getElementById("ai-settings-drawer-panel");
+        return Boolean(
+          panel && document.activeElement && panel.contains(document.activeElement)
+        );
+      });
+      expect(insideDrawer).toBe(true);
+    }
+
+    // 5. 验证文案已更新为「服务端点连通性检查」，且未填个人密钥时自定义端点会被安全边界拦截
+    const testConnBtn = page.locator("#btn-test-ai-connection");
+    await expect(testConnBtn).toContainText("服务端点连通性检查");
+    await page
+      .locator("#input-openai-base")
+      .fill("https://custom-untrusted.example.com/v1");
+    await testConnBtn.click();
+    await expect(page.locator("#ai-connection-test-result")).toContainText(
+      "安全边界限制"
+    );
+
+    // 6. 按 Escape 关闭抽屉，并验证焦点准确返回至原入口 #header-ai-trigger
+    await page.keyboard.press("Escape");
+    await expect(drawer).toBeHidden();
+    await expect(headerTrigger).toBeFocused();
+
+    // 7. 桌面端额外验证从左侧导航栏入口打开并关闭后焦点回到 #sidebar-settings-btn
+    if (!isMobile) {
+      const sidebarTrigger = page.locator("#sidebar-settings-btn");
+      await sidebarTrigger.focus();
+      await page.keyboard.press("Enter");
+      await expect(drawer).toBeVisible();
+      await expect(closeBtn).toBeFocused();
+
+      await page.keyboard.press("Escape");
+      await expect(drawer).toBeHidden();
+      await expect(sidebarTrigger).toBeFocused();
+    }
+  });
 });

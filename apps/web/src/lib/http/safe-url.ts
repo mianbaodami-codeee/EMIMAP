@@ -64,6 +64,19 @@ export function assertSafeOutboundUrl(rawUrl: string): URL {
 }
 
 /**
+ * 规范化 AI 服务端点 Base URL（校验公网地址、拒绝查询串与锚点、剥离末尾斜杠），
+ * 用于精确比对管理员可信端点与用户自定义端点。
+ */
+export function normalizeEndpointBaseUrl(rawUrl: string): string {
+  const safe = assertSafeOutboundUrl(rawUrl);
+  if (safe.search || safe.hash) {
+    throw new Error("API Base URL 不允许包含查询参数或锚点片段");
+  }
+  const cleanPath = safe.pathname.replace(/\/+$/, "");
+  return `${safe.origin}${cleanPath}`;
+}
+
+/**
  * 提取干净的站点主域名用于卡片展示（去除 www. 前缀）
  */
 export function extractDomain(rawUrl: string): string {

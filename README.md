@@ -82,6 +82,7 @@ pnpm test:e2e
 
 ## 四、文档索引
 
+- [第一阶段技术调研、设计方向比较与独立审查记录](./docs/research-and-design-decisions.md)
 - [开发者技术架构文档](./docs/architecture.md)
 - [用户使用手册](./docs/user-guide.md)
 - [环境变量说明模板](./.env.example)

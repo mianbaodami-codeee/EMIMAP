@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   CheckCircle2,
   KeyRound,
   Loader2,
@@ -9,13 +10,48 @@ import {
   ShieldAlert,
   X,
 } from "lucide-react";
-import type { AIProviderId } from "@omnikit/shared";
+import type {
+  AIConnectionCheckResult,
+  AIProviderId,
+} from "@omnikit/shared";
 import { useAppUI } from "@/components/providers/app-providers";
+
+const FOCUSABLE_SELECTOR = [
+  "a[href]",
+  "button:not([disabled])",
+  'input:not([disabled]):not([type="hidden"])',
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(", ");
+
+function getFocusableElements(container: HTMLElement | null): HTMLElement[] {
+  if (!container) return [];
+  return Array.from(
+    container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+  ).filter(
+    (el) =>
+      !el.hasAttribute("disabled") &&
+      el.getAttribute("aria-hidden") !== "true" &&
+      el.getClientRects().length > 0
+  );
+}
+
+type ConnectionUiState =
+  | {
+      kind: "success" | "warning";
+      data: AIConnectionCheckResult;
+    }
+  | {
+      kind: "error";
+      message: string;
+    };
 
 export function AISettingsDrawer() {
   const {
     aiDrawerOpen,
     setAiDrawerOpen,
+    restoreAiDrawerTriggerFocus,
     aiSettings,
     updateAiSettings,
     serverAiStatus,
@@ -24,18 +60,99 @@ export function AISettingsDrawer() {
   } = useAppUI();
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{
-    ok: boolean;
-    message: string;
-  } | null>(null);
+  const [testState, setTestState] = useState<ConnectionUiState | null>(null);
+
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const wasOpenRef = useRef(false);
+
+  // 管理抽屉打开时的自动聚焦、键盘 Tab 循环陷阱、Esc 关闭，以及关闭后焦点回退原触发按钮
+  useEffect(() => {
+    if (!aiDrawerOpen) {
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false;
+        restoreAiDrawerTriggerFocus();
+      }
+      return;
+    }
+
+    wasOpenRef.current = true;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    // 打开时立即将键盘焦点移入抽屉内首个交互控件
+    closeBtnRef.current?.focus();
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        setAiDrawerOpen(false);
+        return;
+      }
+
+      if (e.key === "Tab") {
+        const panel = panelRef.current;
+        if (!panel) return;
+        const focusables = getFocusableElements(panel);
+        if (focusables.length === 0) {
+          e.preventDefault();
+          panel.focus();
+          return;
+        }
+
+        const first = focusables[0]!;
+        const last = focusables[focusables.length - 1]!;
+        const active = document.activeElement as HTMLElement | null;
+        const insidePanel = active ? panel.contains(active) : false;
+
+        if (e.shiftKey) {
+          if (!insidePanel || active === panel || active === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (!insidePanel || active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    };
+
+    const onFocusIn = (e: FocusEvent) => {
+      const panel = panelRef.current;
+      const target = e.target as Node | null;
+      if (panel && target && !panel.contains(target)) {
+        const focusables = getFocusableElements(panel);
+        (focusables[0] ?? panel).focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown, true);
+    document.addEventListener("focusin", onFocusIn);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener("keydown", onKeyDown, true);
+      document.removeEventListener("focusin", onFocusIn);
+    };
+  }, [aiDrawerOpen, setAiDrawerOpen, restoreAiDrawerTriggerFocus]);
 
   if (!aiDrawerOpen) return null;
 
+  const isGemini = aiSettings.activeProvider === "gemini";
+  const isCompatible = aiSettings.activeProvider === "openai_compatible";
+  const hasCustomBaseWithoutUserKey =
+    !isGemini &&
+    !aiSettings.openaiApiKey.trim() &&
+    (isCompatible || Boolean(aiSettings.openaiBaseUrl.trim()));
+
   const handleTestConnection = async () => {
     setTesting(true);
-    setTestResult(null);
+    setTestState(null);
     try {
-      const isGemini = aiSettings.activeProvider === "gemini";
+      const trimmedBase = aiSettings.openaiBaseUrl.trim();
       const res = await fetch("/api/ai/status", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,25 +161,26 @@ export function AISettingsDrawer() {
           apiKey: isGemini
             ? aiSettings.geminiApiKey
             : aiSettings.openaiApiKey,
-          baseUrl: isGemini ? undefined : aiSettings.openaiBaseUrl,
+          baseUrl: isGemini ? undefined : trimmedBase || undefined,
           model: isGemini ? aiSettings.geminiModel : aiSettings.openaiModel,
         }),
       });
-      const data = await res.json();
-      if (data.ok) {
-        setTestResult({
-          ok: true,
-          message: `连接验证通过 (${data.data.provider} · ${data.data.latencyMs}ms)`,
+      const payload = await res.json();
+      if (payload.ok && payload.data) {
+        const checkData = payload.data as AIConnectionCheckResult;
+        setTestState({
+          kind: checkData.modelAvailable ? "success" : "warning",
+          data: checkData,
         });
       } else {
-        setTestResult({
-          ok: false,
-          message: data.error?.message || "连接测试未通过",
+        setTestState({
+          kind: "error",
+          message: payload.error?.message || "服务端点连通性检查未通过",
         });
       }
     } catch {
-      setTestResult({
-        ok: false,
+      setTestState({
+        kind: "error",
         message: "网络请求异常，请检查网络连接",
       });
     } finally {
@@ -75,19 +193,23 @@ export function AISettingsDrawer() {
       id="ai-settings-drawer"
       role="dialog"
       aria-modal="true"
-      aria-label="统一 AI 模型与本地客户端桥接设置"
+      aria-labelledby="ai-drawer-title"
       className="fixed inset-0 z-50 flex justify-end"
     >
       <div
+        aria-hidden="true"
         onClick={() => setAiDrawerOpen(false)}
         className="fixed inset-0 bg-black/50"
       />
       <div
+        ref={panelRef}
+        id="ai-settings-drawer-panel"
+        tabIndex={-1}
         style={{
           backgroundColor: "var(--bg-surface)",
           borderColor: "var(--border-strong)",
         }}
-        className="relative z-10 w-full max-w-md h-full border-l flex flex-col overflow-hidden"
+        className="relative z-10 w-full max-w-md h-full border-l flex flex-col overflow-hidden outline-none"
       >
         <div className="h-14 px-5 border-b flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
@@ -95,11 +217,12 @@ export function AISettingsDrawer() {
               style={{ color: "var(--accent-primary)" }}
               className="h-4 w-4"
             />
-            <h2 className="text-sm font-semibold">
+            <h2 id="ai-drawer-title" className="text-sm font-semibold">
               AI 模型适配与本地客户端中心
             </h2>
           </div>
           <button
+            ref={closeBtnRef}
             type="button"
             id="ai-drawer-close"
             onClick={() => setAiDrawerOpen(false)}
@@ -111,7 +234,7 @@ export function AISettingsDrawer() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6 text-xs">
-          {/* 服务端预置状态 */}
+          {/* 服务端预置状态与端点安全边界 */}
           <section
             style={{ backgroundColor: "var(--bg-subtle)" }}
             className="p-3.5 rounded-md border space-y-2"
@@ -119,7 +242,7 @@ export function AISettingsDrawer() {
             <div className="font-semibold flex items-center justify-between">
               <span>服务端网关密钥状态</span>
               <span className="font-mono text-[11px] opacity-75">
-                密钥零前端暴露
+                可信端点绑定保护
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
@@ -157,7 +280,7 @@ export function AISettingsDrawer() {
               </div>
             </div>
             <p style={{ color: "var(--fg-muted)" }} className="leading-relaxed">
-              当服务端未预置密钥或您希望使用个人配额时，可在下方填入自有 API Key（BYOK），密钥仅存储于您当前浏览器本地。
+              安全边界规则：服务器预置密钥仅允许发往管理员配置的可信端点；若使用自定义 Base URL 或「兼容端点」，必须填写您自己的个人 API Key（仅存当前浏览器本地）。
             </p>
           </section>
 
@@ -179,9 +302,11 @@ export function AISettingsDrawer() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() =>
-                      updateAiSettings({ activeProvider: item.id })
-                    }
+                    id={`provider-tab-${item.id}`}
+                    onClick={() => {
+                      setTestState(null);
+                      updateAiSettings({ activeProvider: item.id });
+                    }}
                     style={{
                       backgroundColor: active
                         ? "var(--accent-soft)"
@@ -203,14 +328,16 @@ export function AISettingsDrawer() {
           </section>
 
           {/* OpenAI / 兼容端点表单 */}
-          {aiSettings.activeProvider !== "gemini" ? (
+          {!isGemini ? (
             <section className="space-y-3">
               <div>
                 <label
                   htmlFor="input-openai-key"
                   className="block font-medium mb-1"
                 >
-                  OpenAI / 兼容接口 API Key（本地存储）
+                  {isCompatible
+                    ? "兼容接口个人 API Key（必填 · 本地存储）"
+                    : "OpenAI 个人 API Key（本地存储）"}
                 </label>
                 <input
                   id="input-openai-key"
@@ -230,7 +357,9 @@ export function AISettingsDrawer() {
                   htmlFor="input-openai-base"
                   className="block font-medium mb-1"
                 >
-                  API Base URL
+                  {isCompatible
+                    ? "自定义 API Base URL（必填）"
+                    : "自定义 API Base URL（可选 · 留空使用默认可信端点）"}
                 </label>
                 <input
                   id="input-openai-base"
@@ -239,10 +368,22 @@ export function AISettingsDrawer() {
                   onChange={(e) =>
                     updateAiSettings({ openaiBaseUrl: e.target.value })
                   }
-                  placeholder="https://api.openai.com/v1"
+                  placeholder={
+                    isCompatible
+                      ? "https://openrouter.ai/api/v1"
+                      : "留空默认使用服务端可信端点"
+                  }
                   style={{ backgroundColor: "var(--bg-canvas)" }}
                   className="w-full h-9 px-3 rounded-md border font-mono text-xs"
                 />
+                {hasCustomBaseWithoutUserKey && (
+                  <p
+                    style={{ color: "var(--status-verified-fg)" }}
+                    className="mt-1 leading-relaxed"
+                  >
+                    提示：自定义端点与兼容端点不会使用服务器预置密钥，请一并填写上方的个人 API Key。
+                  </p>
+                )}
               </div>
 
               <div>
@@ -250,7 +391,7 @@ export function AISettingsDrawer() {
                   htmlFor="input-openai-model"
                   className="block font-medium mb-1"
                 >
-                  默认模型名称
+                  目标模型名称
                 </label>
                 <input
                   id="input-openai-model"
@@ -309,7 +450,7 @@ export function AISettingsDrawer() {
             </section>
           )}
 
-          {/* 真实连通性测试 */}
+          {/* 服务端点连通性检查与模型核验（明确区分端点可达与模型可用） */}
           <div className="space-y-2">
             <button
               type="button"
@@ -323,30 +464,75 @@ export function AISettingsDrawer() {
               className="w-full h-9 rounded-md font-medium flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {testing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>真实探测当前模型接口连通性</span>
+              <span>服务端点连通性检查</span>
             </button>
+            <p style={{ color: "var(--fg-muted)" }} className="leading-relaxed">
+              说明：该检查分两步核验「服务端点网络与密钥鉴权可达」及「目标模型名称是否存在于端点模型列表」，不消耗推理生成 Token。
+            </p>
 
-            {testResult && (
+            {testState && (
               <div
+                id="ai-connection-test-result"
+                role="status"
                 style={{
-                  backgroundColor: testResult.ok
-                    ? "var(--status-measured-bg)"
-                    : "var(--danger-bg)",
-                  borderColor: testResult.ok
-                    ? "var(--status-measured-border)"
-                    : "var(--danger-border)",
-                  color: testResult.ok
-                    ? "var(--status-measured-fg)"
-                    : "var(--danger-fg)",
+                  backgroundColor:
+                    testState.kind === "success"
+                      ? "var(--status-measured-bg)"
+                      : testState.kind === "warning"
+                      ? "var(--status-verified-bg)"
+                      : "var(--danger-bg)",
+                  borderColor:
+                    testState.kind === "success"
+                      ? "var(--status-measured-border)"
+                      : testState.kind === "warning"
+                      ? "var(--status-verified-border)"
+                      : "var(--danger-border)",
+                  color:
+                    testState.kind === "success"
+                      ? "var(--status-measured-fg)"
+                      : testState.kind === "warning"
+                      ? "var(--status-verified-fg)"
+                      : "var(--danger-fg)",
                 }}
-                className="p-2.5 rounded-md border flex items-start gap-2"
+                className="p-3 rounded-md border space-y-1.5"
               >
-                {testResult.ok ? (
-                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+                {testState.kind === "error" ? (
+                  <div className="flex items-start gap-2">
+                    <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-semibold">端点不可达或已被拦截</div>
+                      <div className="mt-0.5">{testState.message}</div>
+                    </div>
+                  </div>
                 ) : (
-                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
+                  <div className="flex items-start gap-2">
+                    {testState.kind === "success" ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    )}
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="font-semibold">{testState.data.message}</div>
+                      <div className="font-mono text-[11px] flex flex-wrap gap-x-3 gap-y-1 opacity-90">
+                        <span>
+                          端点状态：可达 ({testState.data.latencyMs}ms)
+                        </span>
+                        <span>
+                          模型状态：
+                          {testState.data.modelAvailable
+                            ? "已确认在列表中"
+                            : "未在端点列表中找到"}
+                        </span>
+                        <span>
+                          密钥来源：
+                          {testState.data.keySource === "server"
+                            ? "服务端预置"
+                            : "本地个人密钥"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 )}
-                <span>{testResult.message}</span>
               </div>
             )}
           </div>

@@ -12,11 +12,7 @@ export const ClientAISettingsSchema = z.object({
   activeProvider: z.enum(AI_PROVIDERS).default("openai"),
   preferUserKey: z.boolean().default(true),
   openaiApiKey: z.string().trim().max(256).default(""),
-  openaiBaseUrl: z
-    .string()
-    .trim()
-    .max(256)
-    .default("https://api.openai.com/v1"),
+  openaiBaseUrl: z.string().trim().max(256).default(""),
   openaiModel: z.string().trim().min(1).max(80).default("gpt-4o-mini"),
   geminiApiKey: z.string().trim().max(256).default(""),
   geminiModel: z.string().trim().min(1).max(80).default("gemini-2.5-flash"),
@@ -31,6 +27,26 @@ export const TestAIConnectionSchema = z.object({
   baseUrl: z.string().trim().max(256).optional(),
   model: z.string().trim().min(1).max(80),
 });
+
+export type TestAIConnectionInput = z.infer<typeof TestAIConnectionSchema>;
+
+export interface AIConnectionCheckResult {
+  provider: AIProviderId;
+  /** 兼容布尔字段（同 endpointReachable） */
+  reachable: boolean;
+  /** 服务端点是否网络可达且通过 API Key 鉴权 */
+  endpointReachable: boolean;
+  /** 用户指定的模型名称是否在该端点模型列表或模型元数据中确认存在 */
+  modelAvailable: boolean;
+  /** 本次检查的目标模型名称 */
+  model: string;
+  /** 本次检查实际使用的密钥来源（绝不包含密钥值） */
+  keySource: "user" | "server";
+  /** 本次检查实际请求的服务端点基础地址（不含路径参数与凭据） */
+  checkedEndpoint: string;
+  latencyMs: number;
+  message: string;
+}
 
 export interface AIGatewayStatus {
   openaiServerReady: boolean;
