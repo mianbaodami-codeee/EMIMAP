@@ -24,7 +24,6 @@ import { CustomSiteModal } from "./custom-site-modal";
 import {
   resolveSiteBrandAppearance,
   BrandCardBackdrop,
-  SiteBrandMark,
 } from "@/components/ui/site-brand-mark";
 
 export function HubWorkspace({
@@ -453,20 +452,12 @@ export function HubWorkspace({
                   {/* 卡片首行：品牌渐变方块、名称与操作 */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
-                      <a
-                        href={site.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`打开 ${site.name}`}
-                        className="shrink-0 rounded-xl"
-                      >
-                        <SiteBrandMark
-                          slug={site.slug}
-                          domain={site.domain}
-                          name={site.name}
-                          size="lg"
-                        />
-                      </a>
+                      <span
+                        aria-hidden="true"
+                        data-brand-swatch={brand.brandKey}
+                        style={{ backgroundImage: brand.gradient }}
+                        className="size-11 shrink-0 rounded-xl border border-white/30 shadow-sm"
+                      />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <a

@@ -104,14 +104,14 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       await expect(page).toHaveURL(/\/hub$/);
 
       // 验证必选网站存在、品牌渐变方块渲染、搜索、收藏与新增自定义网址
-      await expect(
-        page.locator('[data-site-slug="steam"] [data-brand-mark="steam"]')
-      ).toBeVisible();
-      await expect(
-        page.locator(
-          '[data-site-slug="google-gemini"] [data-brand-mark="google-gemini"]'
-        )
-      ).toBeVisible();
+      for (const slug of ["steam", "google-gemini"]) {
+        const card = page.locator(`[data-site-slug="${slug}"]`);
+        const swatch = card.locator(`[data-brand-swatch="${slug}"]`);
+        await expect(swatch).toBeVisible();
+        await expect(swatch).toHaveCSS("background-image", /linear-gradient/);
+        await expect(swatch.locator("svg")).toHaveCount(0);
+        await expect(card.locator(".brand-watermark")).toHaveCount(1);
+      }
 
       await page.locator("#hub-add-site-btn").click();
       await page.locator("#site-name-input").fill("Playwright Docs");
