@@ -41,8 +41,8 @@ import {
 import {
   buildWorldGraticuleGeoJson,
   WORLD_ATLAS_GAZETTEER,
-  WORLD_LANDMASS_GEOJSON,
 } from "@/lib/geo/world-atlas-data";
+import { atlasPlace, searchBuiltinGazetteer, computeHaversineKm } from "@/lib/geo/atlas";
 import { ProvenanceBadge } from "@/components/ui/provenance-badge";
 import { useAppUI } from "@/components/providers/app-providers";
 
@@ -73,27 +73,9 @@ const PRESET_GEO_QUESTIONS = [
   "梳理该坐标周边的核心科技产业群、港口航道或自然地理标志",
 ];
 
-function clientHaversineKm(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const rad = (d: number) => (d * Math.PI) / 180;
-  const R = 6371.0088;
-  const dLat = rad(lat2 - lat1);
-  const dLon = rad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return Number(
-    (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(Math.max(0, 1 - a)))).toFixed(1)
-  );
-}
-
 function buildEmbeddedMapStyle(isDark: boolean) {
   const waterColor = isDark ? "#08111f" : "#dbeafe";
-  const landFill = isDark ? "#152238" : "#f8fafc";
+  const landFill = isDark ? "#28474d" : "#c6ded9";
   const landStroke = isDark ? "#334155" : "#94a3b8";
   const gridColor = isDark ? "rgba(148,163,184,0.14)" : "rgba(71,85,105,0.14)";
   const equatorColor = isDark ? "rgba(56,189,248,0.32)" : "rgba(3,105,161,0.28)";
@@ -116,8 +98,9 @@ function buildEmbeddedMapStyle(isDark: boolean) {
     sources: {
       landmass: {
         type: "geojson" as const,
-        data: WORLD_LANDMASS_GEOJSON,
+        data: "/atlas/countries.geojson",
       },
+      streets: { type: "raster" as const, tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"], tileSize: 256, maxzoom: 19 },
       graticule: {
         type: "geojson" as const,
         data: buildWorldGraticuleGeoJson(),
@@ -165,6 +148,9 @@ function buildEmbeddedMapStyle(isDark: boolean) {
           "line-color": landStroke,
           "line-width": 1.15,
         },
+      },
+      {
+        id: "osm-streets", type: "raster" as const, source: "streets", minzoom: 5,
       },
       {
         id: "hub-points",
@@ -242,21 +228,24 @@ export function MapWorkspace({
   const activeMarkerRef = useRef<import("maplibre-gl").Marker | null>(null);
   const savedMarkersRef = useRef<import("maplibre-gl").Marker[]>([]);
   const [renderEngine, setRenderEngine] = useState<"maplibre_webgl" | "svg_atlas">(
-    "maplibre_webgl"
+    "svg_atlas"
   );
-  const [svgZoom, setSvgZoom] = useState(1.6);
+  const [svgZoom, setSvgZoom] = useState(1);
   const [svgCenter, setSvgCenter] = useState<{ lat: number; lon: number }>({
     lat: initialPlace.latitude,
     lon: initialPlace.longitude,
   });
 
+  const selectionRevision = useRef(0);
   const selectCoordinates = useCallback(
     async (lat: number, lon: number, fly = true) => {
       const clampedLat = Math.max(-85, Math.min(85, Number(lat.toFixed(5))));
       const clampedLon = Math.max(-180, Math.min(180, Number(lon.toFixed(5))));
+      const revision = ++selectionRevision.current;
+      setSelectedPlace(atlasPlace(clampedLat, clampedLon));
       setLatInput(String(clampedLat));
       setLonInput(String(clampedLon));
-      setSvgCenter({ lat: clampedLat, lon: clampedLon });
+      if (fly) setSvgCenter({ lat: clampedLat, lon: clampedLon });
       setLoadingReverse(true);
       setErrorBanner(null);
 
@@ -280,15 +269,16 @@ export function MapWorkspace({
           `/api/geo/reverse?lat=${clampedLat}&lon=${clampedLon}`
         );
         const payload = await res.json();
+        if (revision !== selectionRevision.current) return;
         if (payload.ok && payload.data) {
           setSelectedPlace(payload.data as ReverseGeocodeResult);
         } else {
-          setErrorBanner(payload.error?.message || "坐标逆地理编码失败");
+          setNotice("当前显示本地底图，联网地点详情暂不可用。");
         }
       } catch {
-        setErrorBanner("请求坐标解析服务失败，请检查网络连接");
+        if (revision === selectionRevision.current) setNotice("当前显示本地底图，联网地点详情暂不可用。");
       } finally {
-        setLoadingReverse(false);
+        if (revision === selectionRevision.current) setLoadingReverse(false);
       }
     },
     []
@@ -297,6 +287,19 @@ export function MapWorkspace({
   // 初始化 MapLibre GL JS（若当前无硬件/软件 WebGL2 上下文则优雅切换至交互式矢量投影画布）
   useEffect(() => {
     let cancelled = false;
+    let instance: import("maplibre-gl").Map | undefined;
+    // 首屏保留静态底图。只有完成底图加载后才切换画布。
+    const fallback = () => {
+      if (cancelled) return;
+      setRenderEngine("svg_atlas");
+      if (instance) {
+        const failed = instance;
+        instance = undefined;
+        mapInstanceRef.current = null;
+        activeMarkerRef.current = null;
+        failed.remove();
+      }
+    };
 
     async function mountMap() {
       if (!mapContainerRef.current) return;
@@ -304,22 +307,31 @@ export function MapWorkspace({
         const maplibregl = await import("maplibre-gl");
         if (cancelled || !mapContainerRef.current) return;
 
+        maplibregl.setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
         const isDarkNow = document.documentElement.classList.contains("dark");
         const map = new maplibregl.Map({
           container: mapContainerRef.current,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           style: buildEmbeddedMapStyle(isDarkNow) as any,
-          center: [initialPlace.longitude, initialPlace.latitude],
-          zoom: 2.6,
+          center: [10, 18],
+          zoom: 0.9,
           attributionControl: false,
         });
 
-        map.on("error", (ev: { error?: { message?: string } }) => {
+        instance = map;
+        map.once("load", () => {
+          if (!cancelled && instance === map) {
+            map.resize();
+            setRenderEngine("maplibre_webgl");
+          }
+        });
+        map.on("webglcontextlost", fallback);
+        map.on("error", (ev) => {
           if (
-            ev?.error &&
-            String(ev.error.message || "").toLowerCase().includes("webgl")
+            ("sourceId" in ev && ev.sourceId === "landmass") ||
+            String(ev.error?.message || "").toLowerCase().includes("webgl")
           ) {
-            setRenderEngine("svg_atlas");
+            fallback();
           }
         });
 
@@ -341,11 +353,8 @@ export function MapWorkspace({
 
         mapInstanceRef.current = map;
         activeMarkerRef.current = marker;
-        setRenderEngine("maplibre_webgl");
       } catch {
-        if (!cancelled) {
-          setRenderEngine("svg_atlas");
-        }
+        fallback();
       }
     }
 
@@ -424,17 +433,15 @@ export function MapWorkspace({
         `/api/geo/search?q=${encodeURIComponent(searchQuery.trim())}`
       );
       const payload = await res.json();
-      if (payload.ok && payload.data?.items) {
-        const list = payload.data.items as GeoSearchCandidate[];
-        setSearchResults(list);
-        if (list[0]) {
-          await selectCoordinates(list[0].latitude, list[0].longitude, true);
-        }
-      } else {
-        setErrorBanner(payload.error?.message || "未找到匹配地点");
-      }
+      if (!payload.ok || !payload.data?.items) throw new Error("search unavailable");
+      const list: GeoSearchCandidate[] = payload.data.items;
+      setSearchResults(list);
+      if (list[0]) await selectCoordinates(list[0].latitude, list[0].longitude);
     } catch {
-      setErrorBanner("地点检索请求异常");
+      const matches = searchBuiltinGazetteer(searchQuery);
+      setSearchResults(matches);
+      if (matches[0]) await selectCoordinates(matches[0].latitude, matches[0].longitude);
+      setNotice(matches.length ? "搜索结果来自本地地名索引。" : "本地索引没有匹配地点，联网搜索暂不可用。");
     } finally {
       setSearching(false);
     }
@@ -475,7 +482,9 @@ export function MapWorkspace({
     }
   };
 
+  const drag = useRef<{ x: number; y: number; lat: number; lon: number; moved: boolean } | null>(null);
   const handleSvgAtlasClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (drag.current?.moved) return;
     const rect = e.currentTarget.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
     const rx = (e.clientX - rect.left) / rect.width;
@@ -706,7 +715,7 @@ export function MapWorkspace({
       const base = compareList[0]!;
       lines.push("## 多地点大圆距离对比", "");
       for (const item of compareList) {
-        const dist = clientHaversineKm(
+        const dist = computeHaversineKm(
           base.latitude,
           base.longitude,
           item.latitude,
@@ -1052,11 +1061,8 @@ export function MapWorkspace({
             >
               <div
                 ref={mapContainerRef}
-                className={
-                  renderEngine === "maplibre_webgl"
-                    ? "w-full h-full"
-                    : "hidden"
-                }
+                className="absolute inset-0"
+                style={{visibility: renderEngine === "maplibre_webgl" ? "visible" : "hidden"}}
               />
 
               {renderEngine === "svg_atlas" && (
@@ -1064,12 +1070,31 @@ export function MapWorkspace({
                   id="geo-svg-atlas"
                   viewBox={svgViewBox}
                   preserveAspectRatio="none"
+                  onPointerDown={(e) => {
+                    if (!e.isPrimary) return;
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    drag.current = { x: e.clientX, y: e.clientY, ...svgCenter, moved: false };
+                  }}
+                  onPointerMove={(e) => {
+                    const start = drag.current;
+                    if (!e.isPrimary || !start || !e.currentTarget.hasPointerCapture(e.pointerId)) return;
+                    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+                    if (Math.hypot(dx, dy) < 4 && !start.moved) return;
+                    start.moved = true;
+                    const box = e.currentTarget.getBoundingClientRect();
+                    const halfWidth = 180 / svgZoom, halfHeight = 90 / svgZoom;
+                    setSvgCenter({
+                      lon: Math.max(-180 + halfWidth, Math.min(180 - halfWidth, start.lon - dx * 2 * halfWidth / box.width)),
+                      lat: Math.max(-90 + halfHeight, Math.min(90 - halfHeight, start.lat + dy * 2 * halfHeight / box.height)),
+                    });
+                  }}
                   onClick={handleSvgAtlasClick}
                   style={{
                     backgroundColor:
                       theme === "dark" ? "#08111f" : "#dbeafe",
                   }}
-                  className="w-full h-full cursor-crosshair block"
+                  className="absolute inset-0 w-full h-full cursor-crosshair block touch-none"
+                  aria-label="可交互世界地图"
                 >
                   {/* 经纬网格线 */}
                   {[-60, -30, 0, 30, 60].map((lat) => (
@@ -1111,22 +1136,7 @@ export function MapWorkspace({
                     />
                   ))}
 
-                  {/* 世界大陆矢量多边形 */}
-                  {WORLD_LANDMASS_GEOJSON.features.map((feat) => {
-                    const pts = feat.geometry.coordinates[0]!
-                      .map(([lon, lat]) => `${lon! + 180},${90 - lat!}`)
-                      .join(" ");
-                    return (
-                      <polygon
-                        key={feat.properties.name}
-                        points={pts}
-                        fill={theme === "dark" ? "#162338" : "#f8fafc"}
-                        stroke={theme === "dark" ? "#3b4f6b" : "#64748b"}
-                        strokeWidth={0.65 / svgZoom}
-                      />
-                    );
-                  })}
-
+                  <image href="/atlas/world.svg" width="360" height="180" />
                   {/* 全球参考枢纽点 */}
                   {WORLD_ATLAS_GAZETTEER.map((hub) => (
                     <circle
@@ -1192,9 +1202,9 @@ export function MapWorkspace({
                   backgroundColor: "var(--bg-elevated)",
                   color: "var(--fg-muted)",
                 }}
-                className="hidden sm:block absolute right-3 bottom-3 px-2 py-1 rounded border text-[10px]"
+                className="absolute right-1 bottom-1 px-1.5 py-0.5 rounded text-[9px]"
               >
-                {selectedPlace.osmAttribution}
+                Natural Earth · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">© OpenStreetMap</a>
               </div>
             </div>
           </div>
@@ -1359,7 +1369,7 @@ export function MapWorkspace({
                         const distKm =
                           idx === 0
                             ? 0
-                            : clientHaversineKm(
+                            : computeHaversineKm(
                                 base.latitude,
                                 base.longitude,
                                 item.latitude,

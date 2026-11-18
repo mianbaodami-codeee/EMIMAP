@@ -28,6 +28,7 @@ import {
 import { ProvenanceBadge } from "@/components/ui/provenance-badge";
 import {
   resolveSiteBrandAppearance,
+  BrandCardBackdrop,
   SiteBrandMark,
 } from "@/components/ui/site-brand-mark";
 import { useAppUI } from "@/components/providers/app-providers";
@@ -553,16 +554,9 @@ export function DiscoverWorkspace({
                   key={item.id}
                   data-resource-domain={item.domain}
                   style={{ backgroundColor: "var(--bg-surface)" }}
-                  className="group relative overflow-hidden rounded-xl border p-4 flex flex-col justify-between gap-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow]"
+                  className="brand-card resource-brand group relative overflow-hidden rounded-xl border p-4 flex flex-col justify-between gap-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_12px_28px_-12px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow]"
                 >
-                  <span
-                    aria-hidden="true"
-                    style={{
-                      background: `radial-gradient(170px circle at 24px 24px, ${brand.accentHex}16, transparent 74%)`,
-                    }}
-                    className="pointer-events-none absolute inset-0 opacity-75 group-hover:opacity-100 transition-opacity"
-                  />
-
+                  <BrandCardBackdrop brand={brand} />
                   <div className="relative space-y-3">
                     {/* 首行：品牌渐变方块 + 资源标题 + 官方标识 */}
                     <div className="flex items-start justify-between gap-3">

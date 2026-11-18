@@ -182,7 +182,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             OmniKit AI 跨平台工程工具平台 · 严格区分实测硬件/地理数据、公开联网信源与大模型推理
           </span>
           <span className="font-mono tabular-nums">
-            Phase 1 Foundation · PostgreSQL Ready
+            <a href="/login" className="hover:underline">账号登录</a>
           </span>
         </footer>
       </div>

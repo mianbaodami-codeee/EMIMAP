@@ -19,8 +19,9 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
     const json = await res.json();
     expect(json.ok).toBe(true);
     expect(json.data.status).toBe("healthy");
-    expect(json.data.database.ok).toBe(true);
-    expect(json.data.database.builtinSiteCount).toBeGreaterThanOrEqual(24);
+    expect(Object.keys(json.data)).toEqual(["status"]);
+    expect((await request.get("/api/admin/status")).status()).toBe(403);
+    expect((await request.get("/api/ai/status")).status()).toBe(403);
   });
 
   test("桌面端与移动端布局、悬停弹出/回缩导航栏、深浅色主题与网址导引交互", async ({

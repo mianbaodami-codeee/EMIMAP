@@ -55,7 +55,6 @@ export function AISettingsDrawer() {
     restoreAiDrawerTriggerFocus,
     aiSettings,
     updateAiSettings,
-    serverAiStatus,
     bridgeState,
     probeLocalBridge,
   } = useAppUI();
@@ -242,56 +241,6 @@ export function AISettingsDrawer() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6 text-xs">
-          {/* 服务端预置状态与端点安全边界 */}
-          <section
-            style={{ backgroundColor: "var(--bg-subtle)" }}
-            className="p-3.5 rounded-md border space-y-2"
-          >
-            <div className="font-semibold flex items-center justify-between">
-              <span>服务端网关密钥状态</span>
-              <span className="font-mono text-[11px] opacity-75">
-                可信端点绑定保护
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <div
-                style={{ backgroundColor: "var(--bg-surface)" }}
-                className="p-2 rounded border flex items-center justify-between"
-              >
-                <span>OpenAI 服务端</span>
-                <span
-                  style={{
-                    color: serverAiStatus?.openaiServerReady
-                      ? "var(--status-measured-fg)"
-                      : "var(--fg-muted)",
-                  }}
-                  className="font-mono"
-                >
-                  {serverAiStatus?.openaiServerReady ? "已配置" : "未预置"}
-                </span>
-              </div>
-              <div
-                style={{ backgroundColor: "var(--bg-surface)" }}
-                className="p-2 rounded border flex items-center justify-between"
-              >
-                <span>Gemini 服务端</span>
-                <span
-                  style={{
-                    color: serverAiStatus?.geminiServerReady
-                      ? "var(--status-measured-fg)"
-                      : "var(--fg-muted)",
-                  }}
-                  className="font-mono"
-                >
-                  {serverAiStatus?.geminiServerReady ? "已配置" : "未预置"}
-                </span>
-              </div>
-            </div>
-            <p style={{ color: "var(--fg-muted)" }} className="leading-relaxed">
-              安全边界规则：服务器预置密钥仅允许发往管理员配置的可信端点；若使用自定义 Base URL 或「兼容端点」，必须填写您自己的个人 API Key（仅存当前浏览器本地）。
-            </p>
-          </section>
-
           {/* 激活供应商选择 */}
           <section className="space-y-3">
             <label className="block font-semibold">

@@ -3,9 +3,10 @@ import { PLATFORM_MODULES } from "@omnikit/shared";
 import {
   listGeoQueryHistory,
   listSavedPlaces,
-  reverseGeocodeCoordinate,
+
 } from "@/lib/geo/service";
 import { resolveClientWorkspaceId } from "@/lib/session/client-id";
+import { atlasPlace } from "@/lib/geo/atlas";
 import { MapWorkspace } from "@/components/map/map-workspace";
 
 export const dynamic = "force-dynamic";
@@ -19,15 +20,14 @@ export const metadata: Metadata = {
 
 export default async function GlobalMapPage() {
   const { clientId } = await resolveClientWorkspaceId();
-  const [initialPlace, initialSavedPlaces, initialHistory] = await Promise.all([
-    reverseGeocodeCoordinate(31.2304, 121.4737),
+  const [initialSavedPlaces, initialHistory] = await Promise.all([
     listSavedPlaces(clientId),
     listGeoQueryHistory(clientId, 20),
   ]);
 
   return (
     <MapWorkspace
-      initialPlace={initialPlace}
+      initialPlace={atlasPlace(31.2304, 121.4737)}
       initialSavedPlaces={initialSavedPlaces}
       initialHistory={initialHistory}
     />
