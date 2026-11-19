@@ -50,4 +50,7 @@ test("低图形能力设备也能看图、缩放和选点", async ({ page }) => 
   await page.route("**/api/geo/reverse?**", route => route.fulfill({ status:503, json:{ok:false} }));
   await page.locator('[data-quick-hub="东京"]').click();
   await expect(page.locator("#geo-selected-name")).toContainText("东京");
+  await expect(page.locator("[data-map-status]")).toContainText("离线底图");
+  await expect(page.getByRole("button", { name: "街道视角" })).toBeDisabled();
+  await expect(map.locator("image")).toHaveAttribute("href", "/atlas/world.svg");
 });

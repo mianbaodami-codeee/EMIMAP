@@ -38,3 +38,11 @@
 ## 4. 关联决策记录
 
 - 技术调研来源、三种设计方向对比及桌面/移动/无障碍审查记录详见：[research-and-design-decisions.md](./research-and-design-decisions.md)。
+
+## Phase 3 浏览器跑分
+
+`POST /api/bench/challenge` 创建会话绑定、三分钟有效的 CPU 负载。客户端运行统一版本的整数负载后，可向 `POST /api/bench/leaderboard` 显式提交。服务器复算校验值，以挑战 UUID 为主键拒绝重放，并将模式和版本、操作系统及逻辑线程数同成绩写入。公开榜单只返回浏览器 CPU 版本的前 20 条。客户端计时和硬件字段仍可伪造，因此不授予硬件认证。
+
+WebGL2、内存和 OPFS 使用浏览器实测并保存在本机。测速默认请求当前站点，可通过 `BENCH_LATENCY_ENDPOINTS` 添加最多五个同口径的 HTTPS 节点。远程节点须允许从本站发出的 CORS 请求，节点 URL 会发送到浏览器。每个请求使用独立超时，按成功样本中位数排序。
+
+地图概览使用 Natural Earth 1:110m 数据。交互底图和放大后的 SVG 使用 1:50m 国界与湖泊，街道视角使用 OpenStreetMap。可用源文件见 [Natural Earth 国家](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_50m_admin_0_countries.geojson) 与 [湖泊](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_50m_lakes.geojson)。执行 `python apps/web/scripts/update-atlas.py countries.geojson lakes.geojson` 可重新生成浏览器资源。公共 Nominatim 的搜索与逆查询共享一秒一次的速率限制，受限时显示内置结果。

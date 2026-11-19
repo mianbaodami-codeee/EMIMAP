@@ -8,20 +8,23 @@ import { ModuleIcon } from "@/components/ui/module-icon";
 import { ProvenanceBadge } from "@/components/ui/provenance-badge";
 import {
   resolveSiteBrandAppearance,
-  BrandCardBackdrop,
-  SiteBrandMark,
+  DirectoryBrandArt,
 } from "@/components/ui/site-brand-mark";
 
 export const dynamic = "force-dynamic";
+
+const featuredSlugs = new Set(["steam", "github", "openai", "google-gemini"]);
 
 export default async function HomePage() {
   const admin = await isAdmin();
   const builtinTotal = BUILTIN_SITE_SEEDS.length;
   const coreModules = PLATFORM_MODULES.filter((m) => m.id !== "overview");
-  const featuredSites = BUILTIN_SITE_SEEDS.slice(0, 10);
+  const commonSites = BUILTIN_SITE_SEEDS.slice(0, 10);
+  const featuredSites = commonSites.filter((site) => featuredSlugs.has(site.slug));
+  const extraSites = commonSites.filter((site) => !featuredSlugs.has(site.slug));
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-7 space-y-8">
+    <div className="workspace-frame space-y-8">
       {admin && <Link href="/admin" className="text-sm underline">管理员面板</Link>}
       <section className="workbench-hero">
         <div className="hero-content">
@@ -33,74 +36,46 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-      {/* 十大核心权威站点速达矩阵 */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold">常用网站</h2>
-
-          </div>
-          <Link
-            href="/hub"
-            style={{ color: "var(--accent-primary)" }}
-            className="text-xs font-medium inline-flex items-center gap-1 hover:underline shrink-0"
-          >
-            <span>查看全部</span>
-            <ArrowRight className="h-3.5 w-3.5" />
+      <section className="space-y-3.5" aria-labelledby="home-common-sites">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 id="home-common-sites" className="text-lg font-semibold tracking-tight">常用网站</h2>
+          <Link href="/hub" className="inline-flex shrink-0 items-center gap-1.5 rounded-md text-sm font-medium text-[var(--accent-primary)] hover:underline">
+            查看全部 <ArrowRight className="size-3.5" aria-hidden="true" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {featuredSites.map((site) => {
-            const brand = resolveSiteBrandAppearance({
-              slug: site.slug,
-              domain: site.url,
-              name: site.name,
-            });
+        <ul className="common-sites-grid">
+          {[...featuredSites, ...extraSites].map((site) => {
+            const brand = resolveSiteBrandAppearance({ slug: site.slug, domain: site.url, name: site.name });
+            const featured = featuredSlugs.has(site.slug);
             return (
-              <a
-                key={site.slug}
-                href={site.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ backgroundColor: "var(--bg-surface)" }}
-                className="brand-card quick-brand group relative overflow-hidden rounded-xl border p-3 flex items-center justify-between gap-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] hover:border-[var(--border-strong)] hover:shadow-[0_10px_24px_-10px_rgba(15,23,42,0.14)] transition-[border-color,box-shadow] duration-200"
-              >
-                <BrandCardBackdrop brand={brand} />
-                <div className="relative flex items-center gap-2.5 min-w-0">
-                  <SiteBrandMark
-                    slug={site.slug}
-                    domain={site.url}
-                    name={site.name}
-                    size="md"
-                  />
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold truncate group-hover:text-[var(--accent-primary)] transition-colors">
-                      {site.name}
-                    </div>
-                    <div
-                      style={{ color: "var(--fg-muted)" }}
-                      className="text-[11px] font-mono truncate"
-                    >
-                      {new URL(site.url).hostname.replace(/^www\./, "")}
-                    </div>
-                  </div>
-                </div>
-                <ArrowUpRight
-                  style={{ color: "var(--fg-muted)" }}
-                  className="relative h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </a>
+              <li className={featured ? "common-sites-featured" : "common-sites-extra"} key={site.slug}>
+                <a
+                  href={site.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-home-site={site.slug}
+                  className={`directory-card common-site-link ${featured ? "common-site-featured" : ""}`}
+                  style={{ "--directory-accent": brand.accentHex } as React.CSSProperties}
+                >
+                  <DirectoryBrandArt brand={brand} />
+                  <span className="common-site-label">
+                    <span className="common-site-name">{site.name}</span>
+                    <span className="common-site-domain">{new URL(site.url).hostname.replace(/^www\./, "")}</span>
+                  </span>
+                  <ArrowUpRight className="common-site-arrow size-4" aria-hidden="true" />
+                </a>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </section>
 
       {/* 七大核心功能模块全景矩阵 */}
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-semibold">工具工作台</h2>
+            <h2 className="text-lg font-semibold tracking-tight">工具工作台</h2>
 
           </div>
 

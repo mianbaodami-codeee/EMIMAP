@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Clock, HardDrive, Layers } from "lucide-react";
 import type { PlatformModuleMeta } from "@omnikit/shared";
 import { ModuleIcon } from "@/components/ui/module-icon";
-import { ProvenanceBadge } from "@/components/ui/provenance-badge";
 
 /**
  * 尚未进入编码阶段（第 2–4 阶段）模块的诚实工程架构蓝图视图
@@ -15,7 +14,7 @@ export function PhaseBlueprintView({
   moduleMeta: PlatformModuleMeta;
 }) {
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div className="workspace-frame workspace-compact space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/"
@@ -41,7 +40,7 @@ export function PhaseBlueprintView({
 
       <section
         style={{ backgroundColor: "var(--bg-surface)" }}
-        className="rounded-lg border p-6 space-y-4"
+        className="workspace-heading space-y-4"
       >
         <div className="flex flex-wrap items-start justify-between gap-4 pb-4 border-b">
           <div className="flex items-center gap-3">
@@ -55,7 +54,7 @@ export function PhaseBlueprintView({
               <ModuleIcon name={moduleMeta.iconName} className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">
+              <h1 className="workspace-title">
                 {moduleMeta.name}
               </h1>
               <p
@@ -67,11 +66,6 @@ export function PhaseBlueprintView({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            <ProvenanceBadge kind="measured" compact />
-            <ProvenanceBadge kind="web_verified" compact />
-            <ProvenanceBadge kind="ai_inferred" compact />
-          </div>
         </div>
 
         <p
