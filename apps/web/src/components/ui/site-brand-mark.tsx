@@ -124,7 +124,7 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
         <path
           d="M8.8 8.2L4.6 12L8.8 15.8M15.2 8.2L19.4 12L15.2 15.8M13.2 6.8L10.8 17.2"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -220,12 +220,12 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
     accentHex: "#d97706",
     renderGlyph: (cls) => (
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
-        <circle cx="12" cy="12" r="7.4" stroke="#ffffff" strokeWidth="1.85" />
-        <circle cx="9.5" cy="10.4" r="1.1" fill="#ffffff" />
-        <circle cx="14.5" cy="10.4" r="1.1" fill="#ffffff" />
+        <circle cx="12" cy="12" r="7.4" stroke="currentColor" strokeWidth="1.85" />
+        <circle cx="9.5" cy="10.4" r="1.1" fill="currentColor" />
+        <circle cx="14.5" cy="10.4" r="1.1" fill="currentColor" />
         <path
           d="M8.8 13.8C9.6 15.2 11 15.9 12 15.9C13 15.9 14.4 15.2 15.2 13.8"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.85"
           strokeLinecap="round"
         />
@@ -245,7 +245,7 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
           width="14.4"
           height="13.6"
           rx="2.8"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.8"
         />
         <path
@@ -273,7 +273,7 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
         <path
           d="M5 6.8C7.4 6.2 9.8 6.6 12 7.8C14.2 6.6 16.6 6.2 19 6.8V17.4C16.6 16.8 14.2 17.2 12 18.4C9.8 17.2 7.4 16.8 5 17.4V6.8Z"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.85"
           strokeLinejoin="round"
         />
@@ -312,7 +312,7 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
           width="9.6"
           height="15.2"
           rx="2.2"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.85"
         />
         <path
@@ -331,8 +331,8 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
     accentHex: "#cb3837",
     renderGlyph: (cls) => (
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
-        <rect x="5" y="7" width="14" height="10" rx="1.5" stroke="#ffffff" strokeWidth="1.9" />
-        <path d="M9.5 17V10.5H12.5V17" stroke="#ffffff" strokeWidth="1.9" />
+        <rect x="5" y="7" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.9" />
+        <path d="M9.5 17V10.5H12.5V17" stroke="currentColor" strokeWidth="1.9" />
       </svg>
     ),
   },
@@ -344,7 +344,7 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
         <path
           d="M5 7.5L8.4 16.8L12 9.4L15.6 16.8L19 7.5"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.9"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -360,10 +360,10 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
         <path
           d="M6.5 6.5H17.5V13.2C17.5 16.4 15 18.8 12 18.8C9 18.8 6.5 16.4 6.5 13.2V6.5Z"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.85"
         />
-        <path d="M9.2 11.2H10.8M13.2 11.2H14.8" stroke="#ffffff" strokeWidth="1.9" strokeLinecap="round" />
+        <path d="M9.2 11.2H10.8M13.2 11.2H14.8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -375,13 +375,13 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
         <path
           d="M4.8 13.2H18.5C18.2 16.6 15.4 18.4 11.4 18.4C7.6 18.4 5.2 16.5 4.8 13.2Z"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.8"
         />
-        <rect x="7" y="9.4" width="2.5" height="2.5" fill="#ffffff" />
-        <rect x="10.3" y="9.4" width="2.5" height="2.5" fill="#ffffff" />
+        <rect x="7" y="9.4" width="2.5" height="2.5" fill="currentColor" />
+        <rect x="10.3" y="9.4" width="2.5" height="2.5" fill="currentColor" />
         <rect x="10.3" y="6.3" width="2.5" height="2.5" fill="#bae6fd" />
-        <rect x="13.6" y="9.4" width="2.5" height="2.5" fill="#ffffff" />
+        <rect x="13.6" y="9.4" width="2.5" height="2.5" fill="currentColor" />
       </svg>
     ),
   },
@@ -393,7 +393,7 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
         <path
           d="M9 6.2H14C15.4 6.2 16.4 7.2 16.4 8.6V11.5H9.6C8 11.5 6.8 12.7 6.8 14.2V15.4M15 17.8H10C8.6 17.8 7.6 16.8 7.6 15.4V12.5H14.4C16 12.5 17.2 11.3 17.2 9.8V8.6"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.8"
           strokeLinecap="round"
         />
@@ -408,7 +408,7 @@ const BRAND_SPECS: Record<string, SiteBrandSpec> = {
       <svg viewBox="0 0 24 24" fill="none" className={cls} aria-hidden="true">
         <polygon
           points="12,4.6 18.4,8.3 18.4,15.7 12,19.4 5.6,15.7 5.6,8.3"
-          stroke="#ffffff"
+          stroke="currentColor"
           strokeWidth="1.85"
           strokeLinejoin="round"
         />
@@ -537,6 +537,15 @@ export function SiteBrandMark({
           {monogram}
         </span>
       )}
+    </span>
+  );
+}
+
+export function DirectoryBrandArt({ brand }: { brand: ReturnType<typeof resolveSiteBrandAppearance> }) {
+  if (!brand.spec) return null;
+  return (
+    <span aria-hidden="true" className="directory-artwork" data-directory-logo={brand.brandKey}>
+      {brand.spec.renderGlyph("directory-glyph")}
     </span>
   );
 }

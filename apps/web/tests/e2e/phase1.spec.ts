@@ -34,6 +34,12 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       "AI 驱动的跨平台工程与硬件工具中枢"
     );
 
+    const quickLinks = page.locator("[data-home-site]");
+    await expect(quickLinks).toHaveCount(10);
+    await expect(quickLinks.locator("[data-directory-logo] svg")).toHaveCount(10);
+    await expect(quickLinks.locator("[data-brand-mark], [data-brand-swatch], .brand-watermark")).toHaveCount(0);
+    await expect(quickLinks.first()).toHaveCSS("background-color", "rgb(255, 255, 255)");
+
     // 验证页面无水平溢出滚动条
     const hasHorizontalOverflow = await page.evaluate(() => {
       return (
@@ -103,14 +109,14 @@ test.describe("第一阶段：平台基座、悬停回缩导航与常用网址�
       await page.locator("#nav-link-hub").click();
       await expect(page).toHaveURL(/\/hub$/);
 
-      // 验证必选网站存在、品牌渐变方块渲染、搜索、收藏与新增自定义网址
+      // 验证网址卡片只显示一枚无底框的品牌图形。
       for (const slug of ["steam", "google-gemini"]) {
         const card = page.locator(`[data-site-slug="${slug}"]`);
-        const swatch = card.locator(`[data-brand-swatch="${slug}"]`);
-        await expect(swatch).toBeVisible();
-        await expect(swatch).toHaveCSS("background-image", /linear-gradient/);
-        await expect(swatch.locator("svg")).toHaveCount(0);
-        await expect(card.locator(".brand-watermark")).toHaveCount(1);
+        const logo = card.locator(`[data-directory-logo="${slug}"]`);
+        await expect(logo.locator("svg")).toHaveCount(1);
+        await expect(logo).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+        await expect(card).toHaveCSS("background-color", "rgb(255, 255, 255)");
+        await expect(card.locator("[data-brand-mark], [data-brand-swatch], .brand-watermark")).toHaveCount(0);
       }
 
       await page.locator("#hub-add-site-btn").click();
